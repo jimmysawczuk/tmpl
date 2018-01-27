@@ -59,7 +59,7 @@ func main() {
 		"env":   tmplfunc.Env,
 
 		"getJSON": tmplfunc.GetJSON,
-		"jsonify": tmplfunc.Jsonify,
+		"jsonify": tmplfunc.JSONify,
 
 		"now":        tmplfunc.NowFunc(o.now),
 		"parseTime":  tmplfunc.ParseTime,

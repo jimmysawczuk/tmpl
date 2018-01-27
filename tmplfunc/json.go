@@ -20,7 +20,7 @@ func GetJSON(path string) (interface{}, error) {
 	return target, nil
 }
 
-func Jsonify(v interface{}) (string, error) {
+func JSONify(v interface{}) (string, error) {
 	by, err := json.Marshal(v)
 	if err != nil {
 		return "", err
