@@ -1,81 +1,65 @@
 package main
 
 import (
+	"flag"
 	"fmt"
-	"html/template"
+	"io"
 	"io/ioutil"
 	"os"
-	"runtime"
-	"time"
 
-	"github.com/jimmysawczuk/tmpl/tmplfunc"
 	"github.com/pkg/errors"
 )
 
-type goEnv struct {
-	OS   string
-	Arch string
-	Ver  string
+var config struct {
+	Output string
+	Format string
 }
 
-type payload struct {
-	Hostname string
-	GoEnv    goEnv
-
-	now  time.Time
-	mode string
+func init() {
+	flag.StringVar(&config.Output, "o", "", "output destination ('' means stdout)")
+	flag.StringVar(&config.Format, "fmt", "", "output format ('', 'html' or 'json')")
 }
 
-func getHostname() string {
-	v, _ := os.Hostname()
-	return v
+func main() {
+	o, err := newPayload()
+	if err != nil {
+		fatalErr(errors.Wrap(err, "build payload"))
+	}
+
+	flag.Parse()
+
+	by, err := ioutil.ReadFile(flag.Arg(0))
+	if err != nil {
+		fatalErr(errors.Wrapf(err, "read template file: %s", flag.Arg(0)))
+	}
+
+	var out io.Writer = os.Stdout
+	if config.Output != "" {
+		fp, err := os.Open(config.Output)
+		if err != nil {
+			fatalErr(errors.Wrapf(err, "open output file %s", config.Output))
+		}
+
+		out = fp
+	}
+
+	switch config.Format {
+	case "html":
+		if err := writeHTML(string(by), o, out); err != nil {
+			fatalErr(err)
+		}
+	case "json":
+		if err := writeJSON(string(by), o, out); err != nil {
+			fatalErr(err)
+		}
+	default:
+		if err := writeText(string(by), o, out); err != nil {
+			fatalErr(err)
+		}
+	}
 }
 
 func fatalErr(err error) {
 	fmt.Fprintf(os.Stderr, "%s\n", err)
 	os.Exit(2)
-}
-
-func main() {
-	o := payload{
-		Hostname: getHostname(),
-		GoEnv: goEnv{
-			Ver:  runtime.Version(),
-			OS:   runtime.GOOS,
-			Arch: runtime.GOARCH,
-		},
-
-		mode: os.Getenv("MODE"),
-		now:  time.Now(),
-	}
-
-	tmplStr, err := ioutil.ReadFile(os.Args[1])
-	if err != nil {
-		fatalErr(errors.Wrapf(err, "read template file: %s", os.Args[1]))
-	}
-
-	tmpl, err := template.New("output").Funcs(map[string]interface{}{
-		"asset": tmplfunc.AssetLoaderFunc(o.now, o.mode),
-		"env":   tmplfunc.Env,
-
-		"getJSON": tmplfunc.GetJSON,
-		"jsonify": tmplfunc.JSONify,
-
-		"now":        tmplfunc.NowFunc(o.now),
-		"parseTime":  tmplfunc.ParseTime,
-		"formatTime": tmplfunc.FormatTime,
-
-		"safeHTML":     tmplfunc.SafeHTML,
-		"safeHTMLAttr": tmplfunc.SafeAttr,
-		"safeJS":       tmplfunc.SafeJS,
-		"safeCSS":      tmplfunc.SafeCSS,
-	}).Parse(string(tmplStr))
-	if err != nil {
-		fatalErr(errors.Wrapf(err, "compile template: %s", os.Args[1]))
-	}
-
-	err = tmpl.Execute(os.Stdout, o)
-	if err != nil {
-		fatalErr(errors.Wrapf(err, "execute template: %s", err))
-	}
 }
