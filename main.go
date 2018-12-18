@@ -12,16 +12,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-var config struct {
-	Output  string
-	Format  string
-	EnvFile string
+var config = struct {
+	Output          string
+	Format          string
+	EnvFile         string
+	TimestampAssets bool
+}{
+	TimestampAssets: true,
 }
 
 func init() {
 	flag.StringVar(&config.Output, "o", "", "output destination ('' means stdout)")
 	flag.StringVar(&config.Format, "fmt", "", "output format ('', 'html' or 'json')")
 	flag.StringVar(&config.EnvFile, "env-file", "", "pipe .env file before executing template")
+	flag.BoolVar(&config.TimestampAssets, "timestamp-assets", true, "set to false to not automatically timestamp production assets")
 }
 
 func main() {

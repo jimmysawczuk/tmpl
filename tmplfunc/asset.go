@@ -8,9 +8,9 @@ import (
 
 var timestampRegexp = regexp.MustCompile(`\.(\w+)$`)
 
-func AssetLoaderFunc(now time.Time, mode string) func(path string) string {
+func AssetLoaderFunc(now time.Time, useTS bool) func(path string) string {
 	return func(path string) string {
-		if mode == "production" {
+		if useTS {
 			return timestampRegexp.ReplaceAllString(path, fmt.Sprintf(".%d.$1", now.Unix()))
 		}
 

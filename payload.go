@@ -40,7 +40,7 @@ func newPayload() (payload, error) {
 
 func (o payload) tmplfuncs() map[string]interface{} {
 	return map[string]interface{}{
-		"asset": tmplfunc.AssetLoaderFunc(o.now, o.mode),
+		"asset": tmplfunc.AssetLoaderFunc(o.now, o.mode == "production" && config.TimestampAssets),
 		"env":   tmplfunc.Env,
 
 		"getJSON": tmplfunc.GetJSON,
