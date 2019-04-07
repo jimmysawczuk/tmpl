@@ -51,7 +51,7 @@ func main() {
 	if config.Output != "" {
 		fp, err := openOutputFile(config.Output)
 		if err != nil {
-			fatalErr(errors.Wrapf(err, "open output file %s"))
+			fatalErr(errors.Wrapf(err, "open output file %s", config.Output))
 		} else {
 			out = fp
 		}

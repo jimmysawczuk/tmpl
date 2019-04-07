@@ -54,5 +54,7 @@ func (o payload) tmplfuncs() map[string]interface{} {
 		"safeHTMLAttr": tmplfunc.SafeAttr,
 		"safeJS":       tmplfunc.SafeJS,
 		"safeCSS":      tmplfunc.SafeCSS,
+
+		"seq": tmplfunc.Seq,
 	}
 }
