@@ -6,7 +6,7 @@ func Seq(max int) []int {
 	}
 
 	v := make([]int, 0, max)
-	for i := 0; i <= max; i++ {
+	for i := 0; i < max; i++ {
 		v = append(v, i)
 	}
 
