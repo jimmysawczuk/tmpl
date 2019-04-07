@@ -1,18 +1,14 @@
 package tmplfunc
 
-import (
-	"github.com/pkg/errors"
-)
-
-func Seq(start, end int) ([]int, error) {
-	if end <= start {
-		return nil, errors.New("end can't be < start")
+func Seq(max int) []int {
+	if max < 0 {
+		return nil
 	}
 
-	v := make([]int, 0, end-start)
-	for i := start; i <= end; i++ {
+	v := make([]int, 0, max)
+	for i := 0; i <= max; i++ {
 		v = append(v, i)
 	}
 
-	return v, nil
+	return v
 }
