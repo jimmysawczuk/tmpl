@@ -18,8 +18,7 @@ type payload struct {
 	Hostname string
 	GoEnv    goEnv
 
-	now  time.Time
-	mode string
+	now time.Time
 }
 
 func newPayload() (payload, error) {
@@ -32,15 +31,13 @@ func newPayload() (payload, error) {
 			OS:   runtime.GOOS,
 			Arch: runtime.GOARCH,
 		},
-
-		mode: os.Getenv("MODE"),
-		now:  time.Now(),
+		now: time.Now(),
 	}, nil
 }
 
 func (o payload) tmplfuncs() map[string]interface{} {
 	return map[string]interface{}{
-		"asset": tmplfunc.AssetLoaderFunc(o.now, o.mode == "production" && config.TimestampAssets),
+		"asset": tmplfunc.AssetLoaderFunc(o.now, config.timestampAssets),
 		"env":   tmplfunc.Env,
 
 		"getJSON": tmplfunc.GetJSON,

@@ -5,13 +5,19 @@ import (
 	"encoding/json"
 	html "html/template"
 	"io"
+	"io/ioutil"
 	text "text/template"
 
 	"github.com/pkg/errors"
 )
 
-func writeHTML(in string, o payload, out io.Writer) error {
-	tmpl, err := html.New("output").Funcs(o.tmplfuncs()).Parse(in)
+func read(in io.Reader) string {
+	by, _ := ioutil.ReadAll(in)
+	return string(by)
+}
+
+func writeHTML(in io.Reader, o payload, out io.Writer) error {
+	tmpl, err := html.New("output").Funcs(o.tmplfuncs()).Parse(read(in))
 	if err != nil {
 		return errors.Wrap(err, "compile template")
 	}
@@ -23,8 +29,8 @@ func writeHTML(in string, o payload, out io.Writer) error {
 	return nil
 }
 
-func writeJSON(in string, o payload, out io.Writer) error {
-	tmpl, err := text.New("output").Funcs(o.tmplfuncs()).Parse(in)
+func writeJSON(in io.Reader, o payload, out io.Writer) error {
+	tmpl, err := text.New("output").Funcs(o.tmplfuncs()).Parse(read(in))
 	if err != nil {
 		errors.Wrap(err, "compile template")
 	}
@@ -44,8 +50,8 @@ func writeJSON(in string, o payload, out io.Writer) error {
 	return nil
 }
 
-func writeText(in string, o payload, out io.Writer) error {
-	tmpl, err := text.New("output").Funcs(o.tmplfuncs()).Parse(in)
+func writeText(in io.Reader, o payload, out io.Writer) error {
+	tmpl, err := text.New("output").Funcs(o.tmplfuncs()).Parse(read(in))
 	if err != nil {
 		return errors.Wrap(err, "compile template")
 	}
