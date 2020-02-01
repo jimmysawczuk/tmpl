@@ -56,5 +56,6 @@ func (o payload) tmplfuncs() map[string]interface{} {
 		"safeCSS":      tmplfunc.SafeCSS,
 
 		"seq": tmplfunc.Seq,
+		"add": tmplfunc.Add,
 	}
 }

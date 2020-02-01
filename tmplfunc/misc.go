@@ -12,3 +12,7 @@ func Seq(max int) []int {
 
 	return v
 }
+
+func Add(a, b int) int {
+	return a + b
+}
