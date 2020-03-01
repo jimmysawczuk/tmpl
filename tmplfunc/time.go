@@ -15,3 +15,12 @@ func ParseTime(s string) (time.Time, error) {
 func FormatTime(format string, t time.Time) string {
 	return t.Format(format)
 }
+
+func TimeIn(tz string, t time.Time) (time.Time, error) {
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return t, err
+	}
+
+	return t.In(loc), nil
+}

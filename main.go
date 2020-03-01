@@ -16,30 +16,30 @@ var config = struct {
 	Output          string
 	Format          string
 	EnvFile         string
+	Minify          bool
 	TimestampAssets bool
-}{
-	TimestampAssets: true,
-}
+}{}
 
 func init() {
 	flag.StringVar(&config.Output, "o", "", "output destination ('' means stdout)")
 	flag.StringVar(&config.Format, "fmt", "", "output format ('', 'html' or 'json')")
 	flag.StringVar(&config.EnvFile, "env-file", "", "pipe .env file before executing template")
-	flag.BoolVar(&config.TimestampAssets, "timestamp-assets", true, "set to false to not automatically timestamp production assets")
+	flag.BoolVar(&config.Minify, "min", false, "minify output")
+	flag.BoolVar(&config.TimestampAssets, "timestamp-assets", false, "inject references to assets with timestamps, i.e. /path/to/script.123456789.js")
 }
 
 func main() {
-	o, err := newPayload()
-	if err != nil {
-		fatalErr(errors.Wrap(err, "build payload"))
-	}
-
 	flag.Parse()
 
 	if config.EnvFile != "" {
 		if err := godotenv.Load(config.EnvFile); err != nil {
 			fatalErr(errors.Wrapf(err, "load .env file %s", config.EnvFile))
 		}
+	}
+
+	o, err := newPayload(config.TimestampAssets)
+	if err != nil {
+		fatalErr(errors.Wrap(err, "build payload"))
 	}
 
 	by, err := ioutil.ReadFile(flag.Arg(0))
@@ -61,11 +61,11 @@ func main() {
 
 	switch config.Format {
 	case "html":
-		if err := writeHTML(string(by), o, out); err != nil {
+		if err := writeHTML(string(by), o, config.Minify, out); err != nil {
 			fatalErr(err)
 		}
 	case "json":
-		if err := writeJSON(string(by), o, out); err != nil {
+		if err := writeJSON(string(by), o, config.Minify, out); err != nil {
 			fatalErr(err)
 		}
 	default:
