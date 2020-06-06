@@ -1,99 +1,192 @@
 package main
 
 import (
+	"encoding/json"
 	"flag"
-	"fmt"
-	"io"
-	"io/ioutil"
+	"log"
 	"os"
 	"path/filepath"
 
-	"github.com/joho/godotenv"
+	"github.com/fsnotify/fsnotify"
+	"github.com/jimmysawczuk/tmpl/tmpl"
 	"github.com/pkg/errors"
 )
 
-var config = struct {
-	Output          string
-	Format          string
-	EnvFile         string
-	Minify          bool
-	TimestampAssets bool
-}{}
+type Block struct {
+	In     string `json:"in"`
+	Out    string `json:"out"`
+	Format string `json:"format"`
+
+	Options BlockOpts `json:"options"`
+}
+
+type BlockOpts struct {
+	Minify bool              `json:"minify"`
+	Env    map[string]string `json:"env"`
+}
+
+var blocks []Block
+var watchMode bool
+var configFile string
+
+type pipeline struct {
+	inpath  string
+	outpath string
+	format  string
+
+	minify bool
+	env    map[string]string
+}
 
 func init() {
-	flag.StringVar(&config.Output, "o", "", "output destination ('' means stdout)")
-	flag.StringVar(&config.Format, "fmt", "", "output format ('', 'html' or 'json')")
-	flag.StringVar(&config.EnvFile, "env-file", "", "pipe .env file before executing template")
-	flag.BoolVar(&config.Minify, "min", false, "minify output")
-	flag.BoolVar(&config.TimestampAssets, "timestamp-assets", false, "inject references to assets with timestamps, i.e. /path/to/script.123456789.js")
+	flag.StringVar(&configFile, "f", "./tmpl.config.json", "path to tmpl config file")
+	flag.BoolVar(&watchMode, "w", false, "run in watch mode")
 }
 
 func main() {
 	flag.Parse()
 
-	if config.EnvFile != "" {
-		if err := godotenv.Load(config.EnvFile); err != nil {
-			fatalErr(errors.Wrapf(err, "load .env file %s", config.EnvFile))
+	if err := run(); err != nil {
+		log.Fatal(err.Error())
+		os.Exit(2)
+	}
+}
+
+func run() error {
+	fp, err := os.Open(configFile)
+	if err != nil {
+		return errors.Wrapf(err, "open config file (path: %s)", configFile)
+	}
+
+	if err := json.NewDecoder(fp).Decode(&blocks); err != nil {
+		return errors.Wrap(err, "json: decode config file")
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		return errors.Wrap(err, "fsnotify: new")
+	}
+	defer watcher.Close()
+
+	pipelines := []pipeline{}
+
+	for i, b := range blocks {
+
+		pipe := pipeline{
+			format: b.Format,
+			minify: b.Options.Minify,
+			env:    b.Options.Env,
 		}
-	}
 
-	o, err := newPayload(config.TimestampAssets)
-	if err != nil {
-		fatalErr(errors.Wrap(err, "build payload"))
-	}
+		pipe.inpath, _ = filepath.Abs(b.In)
 
-	by, err := ioutil.ReadFile(flag.Arg(0))
-	if err != nil {
-		fatalErr(errors.Wrapf(err, "read template file: %s", flag.Arg(0)))
-	}
+		ostat, err := os.Stat(b.Out)
+		if err == nil {
+			if ostat.IsDir() {
+				outpath := filepath.Join(b.Out, filepath.Base(b.In))
 
-	var out io.Writer = os.Stdout
-	if config.Output != "" {
-		fp, err := openOutputFile(config.Output)
-		if err != nil {
-			fatalErr(errors.Wrapf(err, "open output file %s", config.Output))
+				_, err := os.Stat(outpath)
+				if err == nil || os.IsNotExist(err) {
+					pipe.outpath, _ = filepath.Abs(outpath)
+				} else {
+					return errors.Wrapf(err, "stat output path (path: %s, block: %d)", outpath, i+1)
+				}
+
+				pipe.outpath, _ = filepath.Abs(filepath.Join(b.Out, filepath.Base(b.In)))
+			} else {
+				pipe.outpath, _ = filepath.Abs(b.Out)
+			}
+		} else if os.IsNotExist(err) {
+			if err := os.MkdirAll(filepath.Dir(b.Out), 0755); err != nil {
+				return errors.Wrapf(err, "mkdir (path: %s, block: %d)", filepath.Dir(b.Out), i+1)
+			}
+
+			pipe.outpath, _ = filepath.Abs(b.Out)
 		} else {
-			out = fp
+			return errors.Wrapf(err, "stat (output: %s, block: %d)", b.Out, i+1)
 		}
 
-		out = fp
+		pipelines = append(pipelines, pipe)
+
+		if watchMode {
+			log.Println("watching", pipe.inpath)
+			watcher.Add(pipe.inpath)
+		}
 	}
 
-	switch config.Format {
+	for _, pipe := range pipelines {
+		if err := pipe.fire(); err != nil {
+			return errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath)
+		}
+
+	}
+
+	if watchMode {
+		done := make(chan bool)
+		go func() {
+			for {
+				select {
+				case event, ok := <-watcher.Events:
+					if !ok {
+						return
+					}
+
+					if event.Op&fsnotify.Write == fsnotify.Write {
+						log.Println("changed:", event.Name)
+
+						for _, pipe := range pipelines {
+							if pipe.inpath == event.Name {
+								if err := pipe.fire(); err != nil {
+									log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath))
+								}
+								log.Println(" --> wrote:", pipe.outpath)
+							}
+						}
+					}
+				case err, ok := <-watcher.Errors:
+					if !ok {
+						return
+					}
+					log.Println("error:", err)
+				}
+			}
+		}()
+		<-done
+	}
+
+	return nil
+}
+
+func (p *pipeline) fire() error {
+
+	in, err := os.Open(p.inpath)
+	if err != nil {
+		return errors.Wrapf(err, "open input (path: %s)", p.inpath)
+	}
+	defer in.Close()
+
+	out, err := os.OpenFile(p.outpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0644)
+	if err != nil {
+		return errors.Wrapf(err, "open output (path: %s)", p.outpath)
+	}
+	defer out.Close()
+
+	tmpl := tmpl.New()
+
+	switch p.format {
 	case "html":
-		if err := writeHTML(string(by), o, config.Minify, out); err != nil {
-			fatalErr(err)
+		if err := tmpl.WriteHTML(in, out, p.minify); err != nil {
+			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
 		}
 	case "json":
-		if err := writeJSON(string(by), o, config.Minify, out); err != nil {
-			fatalErr(err)
+		if err := tmpl.WriteJSON(in, out, p.minify); err != nil {
+			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
 		}
 	default:
-		if err := writeText(string(by), o, out); err != nil {
-			fatalErr(err)
+		if err := tmpl.WriteText(in, out); err != nil {
+			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
 		}
 	}
-}
 
-func openOutputFile(path string) (io.Writer, error) {
-	if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
-		return nil, errors.Wrap(err, "mkdir")
-	}
-
-	fp, err := os.OpenFile(config.Output, os.O_CREATE|os.O_TRUNC|os.O_RDWR, 0644)
-	if err != nil {
-		perr, ok := err.(*os.PathError)
-		if !ok {
-			return nil, errors.New("unexpected error; couldn't assert to *os.PathError")
-		}
-
-		return nil, perr
-	}
-
-	return fp, nil
-}
-
-func fatalErr(err error) {
-	fmt.Fprintf(os.Stderr, "%s\n", err)
-	os.Exit(2)
+	return nil
 }
