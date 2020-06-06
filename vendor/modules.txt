@@ -1,4 +1,14 @@
-# github.com/joho/godotenv v1.2.0
-github.com/joho/godotenv
+# github.com/fsnotify/fsnotify v1.4.9
+github.com/fsnotify/fsnotify
 # github.com/pkg/errors v0.8.0
 github.com/pkg/errors
+# github.com/tdewolff/minify v2.3.6+incompatible
+github.com/tdewolff/minify
+github.com/tdewolff/minify/html
+# github.com/tdewolff/parse v2.3.4+incompatible
+github.com/tdewolff/parse
+github.com/tdewolff/parse/buffer
+github.com/tdewolff/parse/html
+github.com/tdewolff/parse/strconv
+# golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9
+golang.org/x/sys/unix
