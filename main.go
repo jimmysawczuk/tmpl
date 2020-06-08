@@ -5,7 +5,9 @@ import (
 	"flag"
 	"log"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"strings"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/jimmysawczuk/tmpl/tmpl"
@@ -28,6 +30,7 @@ type BlockOpts struct {
 var blocks []Block
 var watchMode bool
 var configFile string
+var runCommand []string
 
 type pipeline struct {
 	inpath  string
@@ -45,6 +48,10 @@ func init() {
 
 func main() {
 	flag.Parse()
+
+	if args := flag.Args(); len(args) > 0 {
+		runCommand = args
+	}
 
 	if err := run(); err != nil {
 		log.Fatal(err.Error())
@@ -118,7 +125,17 @@ func run() error {
 		if err := pipe.fire(); err != nil {
 			return errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath)
 		}
+	}
 
+	if len(runCommand) > 0 {
+		cmd := exec.Command(runCommand[0], runCommand[1:]...)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		cmd.Stdin = os.Stdin
+
+		if err := cmd.Start(); err != nil {
+			return errors.Wrapf(err, "command: start (%s)", strings.Join(runCommand, " "))
+		}
 	}
 
 	if watchMode {
@@ -171,19 +188,17 @@ func (p *pipeline) fire() error {
 	}
 	defer out.Close()
 
-	tmpl := tmpl.New()
-
 	switch p.format {
 	case "html":
-		if err := tmpl.WriteHTML(in, out, p.minify); err != nil {
+		if err := tmpl.New().WriteHTML(in, out, p.minify); err != nil {
 			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
 		}
 	case "json":
-		if err := tmpl.WriteJSON(in, out, p.minify); err != nil {
+		if err := tmpl.New().WriteJSON(in, out, p.minify); err != nil {
 			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
 		}
 	default:
-		if err := tmpl.WriteText(in, out); err != nil {
+		if err := tmpl.New().WriteText(in, out); err != nil {
 			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
 		}
 	}
