@@ -26,7 +26,8 @@ type Tmpl struct {
 	Hostname string
 	GoEnv    goEnv
 
-	now time.Time
+	now     time.Time
+	envVars map[string]string
 }
 
 func New() Tmpl {
@@ -43,10 +44,15 @@ func New() Tmpl {
 	}
 }
 
-func (t Tmpl) funcs() map[string]interface{} {
+func (t *Tmpl) WithEnv(m map[string]string) *Tmpl {
+	t.envVars = m
+	return t
+}
+
+func (t *Tmpl) funcs() map[string]interface{} {
 	return map[string]interface{}{
 		"asset": tmplfunc.AssetLoaderFunc(t.now),
-		"env":   tmplfunc.Env,
+		"env":   tmplfunc.EnvFunc(t.envVars),
 
 		"getJSON": tmplfunc.GetJSON,
 		"jsonify": tmplfunc.JSONify,
