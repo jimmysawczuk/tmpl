@@ -14,20 +14,20 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Block struct {
+type block struct {
 	In     string `json:"in"`
 	Out    string `json:"out"`
 	Format string `json:"format"`
 
-	Options BlockOpts `json:"options"`
+	Options blockOpts `json:"options"`
 }
 
-type BlockOpts struct {
+type blockOpts struct {
 	Minify bool              `json:"minify"`
 	Env    map[string]string `json:"env"`
 }
 
-var blocks []Block
+var blocks []block
 var watchMode bool
 var configFile string
 var runCommand []string
