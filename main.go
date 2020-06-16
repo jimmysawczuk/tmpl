@@ -69,11 +69,16 @@ func run() error {
 		return errors.Wrap(err, "json: decode config file")
 	}
 
-	watcher, err := fsnotify.NewWatcher()
-	if err != nil {
-		return errors.Wrap(err, "fsnotify: new")
+	var watcher *fsnotify.Watcher
+	if watchMode {
+		w, err := fsnotify.NewWatcher()
+		if err != nil {
+			return errors.Wrap(err, "fsnotify: new")
+		}
+
+		watcher = w
+		defer watcher.Close()
 	}
-	defer watcher.Close()
 
 	pipelines := []pipeline{}
 
@@ -122,8 +127,8 @@ func run() error {
 	}
 
 	for _, pipe := range pipelines {
-		if err := pipe.fire(); err != nil {
-			return errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath)
+		if err := pipe.run(); err != nil {
+			return errors.Wrapf(err, "run pipeline (path: %s)", pipe.inpath)
 		}
 	}
 
@@ -153,7 +158,7 @@ func run() error {
 
 						for _, pipe := range pipelines {
 							if pipe.inpath == event.Name {
-								if err := pipe.fire(); err != nil {
+								if err := pipe.run(); err != nil {
 									log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath))
 								}
 								log.Println(" --> wrote:", pipe.outpath)
@@ -174,8 +179,7 @@ func run() error {
 	return nil
 }
 
-func (p *pipeline) fire() error {
-
+func (p *pipeline) run() error {
 	in, err := os.Open(p.inpath)
 	if err != nil {
 		return errors.Wrapf(err, "open input (path: %s)", p.inpath)
@@ -190,15 +194,15 @@ func (p *pipeline) fire() error {
 
 	switch p.format {
 	case "html":
-		if err := tmpl.New().WriteHTML(in, out, p.minify); err != nil {
+		if err := tmpl.New().WriteHTML(out, in, p.minify); err != nil {
 			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
 		}
 	case "json":
-		if err := tmpl.New().WriteJSON(in, out, p.minify); err != nil {
+		if err := tmpl.New().WriteJSON(out, in, p.minify); err != nil {
 			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
 		}
 	default:
-		if err := tmpl.New().WriteText(in, out); err != nil {
+		if err := tmpl.New().WriteText(out, in); err != nil {
 			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
 		}
 	}

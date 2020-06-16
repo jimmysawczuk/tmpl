@@ -51,28 +51,25 @@ func (t *Tmpl) WithEnv(m map[string]string) *Tmpl {
 
 func (t *Tmpl) funcs() map[string]interface{} {
 	return map[string]interface{}{
-		"asset": tmplfunc.AssetLoaderFunc(t.now),
-		"env":   tmplfunc.EnvFunc(t.envVars),
-
-		"getJSON": tmplfunc.GetJSON,
-		"jsonify": tmplfunc.JSONify,
-
-		"now":        tmplfunc.NowFunc(t.now),
-		"parseTime":  tmplfunc.ParseTime,
-		"formatTime": tmplfunc.FormatTime,
-		"timeIn":     tmplfunc.TimeIn,
-
+		"add":          tmplfunc.Add,
+		"asset":        tmplfunc.Asset,
+		"env":          tmplfunc.EnvFunc(t.envVars),
+		"formatTime":   tmplfunc.FormatTime,
+		"getJSON":      tmplfunc.GetJSON,
+		"jsonify":      tmplfunc.JSONify,
+		"now":          tmplfunc.NowFunc(t.now),
+		"parseTime":    tmplfunc.ParseTime,
+		"safeCSS":      tmplfunc.SafeCSS,
 		"safeHTML":     tmplfunc.SafeHTML,
 		"safeHTMLAttr": tmplfunc.SafeAttr,
 		"safeJS":       tmplfunc.SafeJS,
-		"safeCSS":      tmplfunc.SafeCSS,
-
-		"seq": tmplfunc.Seq,
-		"add": tmplfunc.Add,
+		"seq":          tmplfunc.Seq,
+		"sub":          tmplfunc.Sub,
+		"timeIn":       tmplfunc.TimeIn,
 	}
 }
 
-func (t Tmpl) WriteHTML(in io.Reader, out io.Writer, min bool) error {
+func (t Tmpl) WriteHTML(out io.Writer, in io.Reader, min bool) error {
 	buf := bytes.Buffer{}
 	if _, err := io.Copy(&buf, in); err != nil {
 		return errors.Wrap(err, "io: copy (input)")
@@ -107,7 +104,7 @@ func (t Tmpl) WriteHTML(in io.Reader, out io.Writer, min bool) error {
 	return nil
 }
 
-func (t Tmpl) WriteJSON(in io.Reader, out io.Writer, min bool) error {
+func (t Tmpl) WriteJSON(out io.Writer, in io.Reader, min bool) error {
 	buf := bytes.Buffer{}
 	if _, err := io.Copy(&buf, in); err != nil {
 		return errors.Wrap(err, "io: copy (input)")
@@ -142,7 +139,7 @@ func (t Tmpl) WriteJSON(in io.Reader, out io.Writer, min bool) error {
 	return nil
 }
 
-func (t Tmpl) WriteText(in io.Reader, out io.Writer) error {
+func (t Tmpl) WriteText(out io.Writer, in io.Reader) error {
 	buf := bytes.Buffer{}
 	if _, err := io.Copy(&buf, in); err != nil {
 		return errors.Wrap(err, "io: copy (input)")
