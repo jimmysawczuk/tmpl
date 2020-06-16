@@ -13,7 +13,7 @@
 
         Build date: {{ now | formatTime "1/2/2006 3:04:05 PM" }}<br />
         Parse time: {{ with $time := now | formatTime "2006-01-02T15:04:05-07:00" }}{{ parseTime $time | formatTime "January 2, 2006 at 3:04:05 PM" }}{{ end }}<br />
-        TZ: {{ with $time := now | timeIn "Europe/London" }}{{ $time | formatTime "January 2, 2006 at 3:04:05 PM MST" }}{{ end }}<br />
+        In a different timezone: {{ with $time := now | timeIn "Europe/London" }}{{ $time | formatTime "January 2, 2006 at 3:04:05 PM MST" }}{{ end }}<br />
         Go environment: {{ .GoEnv.Ver }}, {{ .GoEnv.OS }} {{ .GoEnv.Arch }}<br />
         Hostname: {{ .Hostname }}
         <hr />

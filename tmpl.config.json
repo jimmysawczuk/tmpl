@@ -1,0 +1,20 @@
+[
+	{
+		"in": "testdata/index.tmpl",
+		"out": "testdata/out/index.html",
+		"format": "html"
+	},
+	{
+		"in": "testdata/json.tmpl",
+		"out": "testdata/out/json.json",
+		"format": "json"
+	},
+	{
+		"in": "testdata/json.tmpl",
+		"out": "testdata/out/json.min.json",
+		"format": "json",
+		"options": {
+			"minify": true
+		}
+	}
+]
