@@ -36,15 +36,17 @@ Here's a sample configuration file:
 
 You can pass the `-w` flag to tmpl to watch the input templates for changes and automatically execute them as they're changed.
 
-## Secondary command
+## Subcommand
 
-You can pass in a secondary command using the `--` flag. A common use for this feature is if you need to run a second development process along with your templates, like webpack.
+You can pass in a subcommand to be run by providing the `--` flag and then your command. You might want to use this if you need to run a second development process, like webpack, alongside your templates.
+
+Here's an example:
 
 ```sh
 $ tmpl -w -- webpack -w --mode=development
 ```
 
-## LICENSE
+## License
 
 [MIT](/LICENSE)
 
