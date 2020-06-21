@@ -132,8 +132,9 @@ func run() error {
 		}
 	}
 
+	var cmd *exec.Cmd
 	if len(runCommand) > 0 {
-		cmd := exec.Command(runCommand[0], runCommand[1:]...)
+		cmd = exec.Command(runCommand[0], runCommand[1:]...)
 		cmd.Stderr = os.Stderr
 		cmd.Stdout = os.Stdout
 		cmd.Stdin = os.Stdin
@@ -174,6 +175,11 @@ func run() error {
 			}
 		}()
 		<-done
+	} else if cmd != nil {
+		err := cmd.Wait()
+		if err != nil {
+			return errors.Wrapf(err, "command: wait (%s)", strings.Join(runCommand, " "))
+		}
 	}
 
 	return nil
