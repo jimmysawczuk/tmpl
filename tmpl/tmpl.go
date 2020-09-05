@@ -54,6 +54,7 @@ func (t *Tmpl) funcs() map[string]interface{} {
 		"add":          tmplfunc.Add,
 		"asset":        tmplfunc.Asset,
 		"env":          tmplfunc.EnvFunc(t.envVars),
+		"file":         tmplfunc.File,
 		"formatTime":   tmplfunc.FormatTime,
 		"getJSON":      tmplfunc.GetJSON,
 		"jsonify":      tmplfunc.JSONify,
