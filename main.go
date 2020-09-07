@@ -3,16 +3,36 @@ package main
 import (
 	"encoding/json"
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/jimmysawczuk/tmpl/tmpl"
 	"github.com/pkg/errors"
 )
+
+var version string = "dev"
+var revision string
+var date string = time.Now().Format(time.RFC3339)
+
+var watchMode bool
+var configFile string
+var showVersion bool
+var runCommand []string
+
+type pipeline struct {
+	inpath  string
+	outpath string
+	format  string
+
+	minify bool
+	env    map[string]string
+}
 
 type block struct {
 	In     string `json:"in"`
@@ -28,26 +48,29 @@ type blockOpts struct {
 }
 
 var blocks []block
-var watchMode bool
-var configFile string
-var runCommand []string
-
-type pipeline struct {
-	inpath  string
-	outpath string
-	format  string
-
-	minify bool
-	env    map[string]string
-}
 
 func init() {
+	flag.Usage = func() {
+		fmt.Printf("tmpl %s\n\n", version)
+
+		fmt.Printf("Usage:\n")
+		fmt.Printf("  tmpl [options] [-- command]\n\n")
+
+		flag.PrintDefaults()
+	}
+
 	flag.StringVar(&configFile, "f", "./tmpl.config.json", "path to tmpl config file")
 	flag.BoolVar(&watchMode, "w", false, "run in watch mode")
+	flag.BoolVar(&showVersion, "v", false, "show version information")
 }
 
 func main() {
 	flag.Parse()
+
+	if showVersion {
+		flag.Usage()
+		os.Exit(0)
+	}
 
 	if args := flag.Args(); len(args) > 0 {
 		runCommand = args
