@@ -22,6 +22,8 @@ jobs:
         cat /tmp/buildtags
 
         CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-linux-amd64" -ldflags "-s -d -w $(cat /tmp/buildtags)" -mod=vendor .
+        CGO_ENABLED=0 GOOS=linux GOARCH=i386 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-linux-i386" -ldflags "-s -d -w $(cat /tmp/buildtags)" -mod=vendor .
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-darwin-amd64" -ldflags "-s -d -w $(cat /tmp/buildtags)" -mod=vendor .
     - name: Create release
       id: create_release
       uses: actions/create-release@v1
@@ -37,6 +39,24 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ./tmpl-$${{ steps.tag.outputs.tag }}-linux-amd64
+        asset_path: ./tmpl-${{ steps.tag.outputs.tag }}-linux-amd64
         asset_name: tmpl-${{ steps.tag.outputs.tag }}-linux-amd64
+        asset_content_type: application/octet-stream
+    - name: Upload build (linux, i386)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./tmpl-${{ steps.tag.outputs.tag }}-linux-i386
+        asset_name: tmpl-${{ steps.tag.outputs.tag }}-linux-i386
+        asset_content_type: application/octet-stream
+    - name: Upload build (darwin, amd64)
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./tmpl-${{ steps.tag.outputs.tag }}-darwin-amd64
+        asset_name: tmpl-${{ steps.tag.outputs.tag }}-darwin-amd64
         asset_content_type: application/octet-stream
