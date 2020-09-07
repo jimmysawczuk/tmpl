@@ -13,7 +13,7 @@ jobs:
         fetch-depth: '0'
     - name: Get tag
       id: tag
-      uses: jimmysawczuk/strip-refs-prefix@master
+      uses: jimmysawczuk/get-tag-from-ref@master
       with:
         ref: ${{ github.ref }}
     - name: Build
