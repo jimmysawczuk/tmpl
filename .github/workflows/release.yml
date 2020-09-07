@@ -21,9 +21,9 @@ jobs:
         echo "-X main.version=${{ steps.tag.outputs.tag }} -X main.revision=$GITHUB_SHA -X main.date=$(date --iso-8601=seconds)" > /tmp/buildtags
         cat /tmp/buildtags
 
-        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-linux-amd64" -ldflags "-s -d -w $(cat /tmp/buildtags)" -mod=vendor .
-        CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-linux-i386" -ldflags "-s -d -w $(cat /tmp/buildtags)" -mod=vendor .
-        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-darwin-amd64" -ldflags "-s -d -w $(cat /tmp/buildtags)" -mod=vendor .
+        CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-linux-amd64" -ldflags "-s -w $(cat /tmp/buildtags)" -mod=vendor .
+        CGO_ENABLED=0 GOOS=linux GOARCH=386 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-linux-i386" -ldflags "-s -w $(cat /tmp/buildtags)" -mod=vendor .
+        CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -a -o "tmpl-${{ steps.tag.outputs.tag }}-darwin-amd64" -ldflags "-s -w $(cat /tmp/buildtags)" -mod=vendor .
     - name: Create release
       id: create_release
       uses: actions/create-release@v1
