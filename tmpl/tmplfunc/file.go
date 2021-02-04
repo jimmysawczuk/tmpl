@@ -2,6 +2,7 @@ package tmplfunc
 
 import (
 	"bytes"
+	"html/template"
 	"io"
 	"os"
 
@@ -21,4 +22,14 @@ func File(path string) (string, error) {
 	}
 
 	return buf.String(), nil
+}
+
+// SVG reads the file at the provided path and returns its contents under the assumption that it's an HTML-safe string.
+func SVG(path string) (template.HTML, error) {
+	contents, err := File(path)
+	if err != nil {
+		return "", err
+	}
+
+	return template.HTML(contents), nil
 }

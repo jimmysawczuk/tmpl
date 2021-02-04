@@ -66,6 +66,7 @@ func (t *Tmpl) funcs() map[string]interface{} {
 		"safeJS":       tmplfunc.SafeJS,
 		"seq":          tmplfunc.Seq,
 		"sub":          tmplfunc.Sub,
+		"svg":          tmplfunc.SVG,
 		"timeIn":       tmplfunc.TimeIn,
 	}
 }

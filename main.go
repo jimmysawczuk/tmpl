@@ -221,17 +221,19 @@ func (p *pipeline) run() error {
 	}
 	defer out.Close()
 
+	t := tmpl.New()
+
 	switch p.format {
 	case "html":
-		if err := tmpl.New().WriteHTML(out, in, p.minify); err != nil {
+		if err := t.WriteHTML(out, in, p.minify); err != nil {
 			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
 		}
 	case "json":
-		if err := tmpl.New().WriteJSON(out, in, p.minify); err != nil {
+		if err := t.WriteJSON(out, in, p.minify); err != nil {
 			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
 		}
 	default:
-		if err := tmpl.New().WriteText(out, in); err != nil {
+		if err := t.WriteText(out, in); err != nil {
 			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
 		}
 	}
