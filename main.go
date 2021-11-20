@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -26,6 +27,8 @@ var (
 var (
 	watchMode   bool
 	serverMode  bool
+	port        int
+	baseDir     string
 	configFile  string
 	showVersion bool
 	runCommand  []string
@@ -75,6 +78,8 @@ func init() {
 	flag.StringVar(&configFile, "f", "./tmpl.config.json", "path to tmpl config file")
 	flag.BoolVar(&watchMode, "w", false, "run in watch mode")
 	flag.BoolVar(&serverMode, "s", false, "run in watch mode and serve")
+	flag.IntVar(&port, "p", 8080, "port to listen on in serve mode")
+	flag.StringVar(&baseDir, "dir", ".", "public dir")
 	flag.BoolVar(&showVersion, "v", false, "show version information")
 }
 
@@ -90,6 +95,8 @@ func main() {
 		runCommand = args
 	}
 
+	watchMode = watchMode || serverMode
+
 	if err := run(); err != nil {
 		log.Fatal(err.Error())
 		os.Exit(2)
@@ -97,6 +104,8 @@ func main() {
 }
 
 func run() error {
+	var dependencyMap map[string]map[string]bool = map[string]map[string]bool{}
+
 	fp, err := os.Open(configFile)
 	if err != nil {
 		return errors.Wrapf(err, "open config file (path: %s)", configFile)
@@ -168,8 +177,18 @@ func run() error {
 			return errors.Wrapf(err, "run pipeline (path: %s)", pipe.inpath)
 		}
 
-		for _, dep := range pipe.dependencies {
-			watcher.Add(dep)
+		if watchMode {
+			for _, dep := range pipe.dependencies {
+				abs, _ := filepath.Abs(dep)
+
+				watcher.Add(abs)
+
+				if dependencyMap[pipe.inpath] == nil {
+					dependencyMap[pipe.inpath] = map[string]bool{}
+				}
+
+				dependencyMap[pipe.inpath][abs] = true
+			}
 		}
 	}
 
@@ -183,6 +202,28 @@ func run() error {
 		if err := cmd.Start(); err != nil {
 			return errors.Wrapf(err, "command: start (%s)", strings.Join(runCommand, " "))
 		}
+	}
+
+	watcherCh := make(chan string)
+	if serverMode {
+		log.Printf("starting server on :%d", port)
+
+		mux := http.NewServeMux()
+		mux.Handle("/", http.FileServer(http.Dir(baseDir)))
+		mux.Handle("/__tmpl", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+			res := <-watcherCh
+			json.NewEncoder(w).Encode(struct {
+				Status string    `json:"status"`
+				File   string    `json:"file"`
+				Date   time.Time `json:"date"`
+			}{
+				Status: "OK",
+				File:   res,
+				Date:   time.Now().Truncate(time.Millisecond),
+			})
+		}))
+
+		go http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
 	}
 
 	if watchMode {
@@ -204,9 +245,21 @@ func run() error {
 									log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath))
 								}
 								log.Println(" --> wrote:", pipe.outpath)
+							} else if dependencyMap[pipe.inpath] != nil && dependencyMap[pipe.inpath][event.Name] {
+								if err := pipe.run(); err != nil {
+									log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath))
+								}
+								log.Println(" --> wrote:", pipe.outpath)
 							}
 						}
 					}
+
+					select {
+					case watcherCh <- event.Name:
+						log.Println(" ! notified listener")
+					default:
+					}
+
 				case err, ok := <-watcher.Errors:
 					if !ok {
 						return
@@ -242,11 +295,11 @@ func (p *pipeline) run() error {
 	var t Tmpl
 	switch p.format {
 	case "html":
-		t = tmpl.New().HTML().WithMinify(p.minify)
+		t = tmpl.New().WithBaseDir(baseDir).WithIO(in, out).HTML().WithMinify(p.minify)
 	case "json":
-		t = tmpl.New().JSON().WithMinify(p.minify)
+		t = tmpl.New().WithBaseDir(baseDir).WithIO(in, out).JSON().WithMinify(p.minify)
 	default:
-		t = tmpl.New()
+		t = tmpl.New().WithBaseDir(baseDir).WithIO(in, out)
 	}
 
 	if err := t.Execute(out, in); err != nil {

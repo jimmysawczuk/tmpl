@@ -29,6 +29,10 @@ type Tmpl struct {
 	Hostname string
 	GoEnv    goEnv
 
+	in      *os.File
+	out     *os.File
+	baseDir string
+
 	now     time.Time
 	envVars map[string]string
 
@@ -49,6 +53,29 @@ func New() *Tmpl {
 	}
 
 	return t
+}
+
+func (t *Tmpl) WithIO(in, out *os.File) *Tmpl {
+	t.in = in
+	t.out = out
+	return t
+}
+
+func (t *Tmpl) WithBaseDir(dir string) *Tmpl {
+	t.baseDir = dir
+	return t
+}
+
+func (t *Tmpl) In() *os.File {
+	return t.in
+}
+
+func (t *Tmpl) Out() *os.File {
+	return t.out
+}
+
+func (t *Tmpl) BaseDir() string {
+	return t.baseDir
 }
 
 func (t *Tmpl) HTML() *HTMLTmpl {
