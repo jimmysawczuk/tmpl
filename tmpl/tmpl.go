@@ -11,14 +11,6 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Format int
-
-const (
-	FormatText = Format(0)
-	FormatJSON = Format(1)
-	FormatHTML = Format(2)
-)
-
 type goEnv struct {
 	OS   string
 	Arch string
@@ -40,7 +32,7 @@ type Tmpl struct {
 	now     time.Time
 	envVars map[string]string
 
-	watched []string
+	dependencies []string
 }
 
 func New() *Tmpl {
@@ -59,17 +51,13 @@ func New() *Tmpl {
 	return t
 }
 
-func (t Tmpl) HTML() *HTMLTmpl {
+func (t *Tmpl) HTML() *HTMLTmpl {
 	return &HTMLTmpl{
 		Tmpl: t,
 	}
 }
 
-func (t Tmpl) Text() *Tmpl {
-	return &t
-}
-
-func (t Tmpl) JSON() *JSONTmpl {
+func (t *Tmpl) JSON() *JSONTmpl {
 	return &JSONTmpl{
 		Tmpl: t,
 	}
@@ -80,9 +68,13 @@ func (t *Tmpl) WithEnv(m map[string]string) *Tmpl {
 	return t
 }
 
-func (t *Tmpl) Watch(path string) error {
-	t.watched = append(t.watched, path)
+func (t *Tmpl) Depend(path string) error {
+	t.dependencies = append(t.dependencies, path)
 	return nil
+}
+
+func (t *Tmpl) Dependencies() []string {
+	return t.dependencies
 }
 
 func (t *Tmpl) Execute(out io.Writer, in io.Reader) error {

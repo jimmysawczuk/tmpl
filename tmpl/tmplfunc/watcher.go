@@ -1,5 +1,5 @@
 package tmplfunc
 
-type Watcher interface {
-	Watch(string) error
+type Depender interface {
+	Depend(string) error
 }

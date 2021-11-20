@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"log"
 	"os"
 	"os/exec"
@@ -37,6 +38,8 @@ type pipeline struct {
 
 	minify bool
 	env    map[string]string
+
+	dependencies []string
 }
 
 type block struct {
@@ -53,6 +56,11 @@ type blockOpts struct {
 }
 
 var blocks []block
+
+type Tmpl interface {
+	Execute(io.Writer, io.Reader) error
+	Dependencies() []string
+}
 
 func init() {
 	flag.Usage = func() {
@@ -159,6 +167,10 @@ func run() error {
 		if err := pipe.run(); err != nil {
 			return errors.Wrapf(err, "run pipeline (path: %s)", pipe.inpath)
 		}
+
+		for _, dep := range pipe.dependencies {
+			watcher.Add(dep)
+		}
 	}
 
 	var cmd *exec.Cmd
@@ -227,20 +239,21 @@ func (p *pipeline) run() error {
 	}
 	defer out.Close()
 
+	var t Tmpl
 	switch p.format {
 	case "html":
-		if err := tmpl.New().HTML().WithMinify(p.minify).Execute(out, in); err != nil {
-			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
-		}
+		t = tmpl.New().HTML().WithMinify(p.minify)
 	case "json":
-		if err := tmpl.New().JSON().WithMinify(p.minify).Execute(out, in); err != nil {
-			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
-		}
+		t = tmpl.New().JSON().WithMinify(p.minify)
 	default:
-		if err := tmpl.New().Text().Execute(out, in); err != nil {
-			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
-		}
+		t = tmpl.New()
 	}
+
+	if err := t.Execute(out, in); err != nil {
+		return errors.Wrapf(err, "execute (%T, in: %s)", t, in)
+	}
+
+	p.dependencies = t.Dependencies()
 
 	return nil
 }

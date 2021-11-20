@@ -11,7 +11,7 @@ import (
 )
 
 type HTMLTmpl struct {
-	Tmpl
+	*Tmpl
 
 	Minify bool
 }

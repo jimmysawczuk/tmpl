@@ -10,7 +10,7 @@ import (
 )
 
 type JSONTmpl struct {
-	Tmpl
+	*Tmpl
 
 	Minify bool
 }
