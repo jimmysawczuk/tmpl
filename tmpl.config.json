@@ -16,5 +16,13 @@
 		"options": {
 			"minify": true
 		}
+	},
+	{
+		"in": "testdata/svg.tmpl",
+		"out": "testdata/out/svg.html",
+		"format": "html",
+		"options": {
+			"minify": true
+		}
 	}
 ]

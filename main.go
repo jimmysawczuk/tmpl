@@ -16,14 +16,19 @@ import (
 	"github.com/pkg/errors"
 )
 
-var version string = "dev"
-var revision string
-var date string = time.Now().Format(time.RFC3339)
+var (
+	version  string = "dev"
+	revision string
+	date     string = time.Now().Format(time.RFC3339)
+)
 
-var watchMode bool
-var configFile string
-var showVersion bool
-var runCommand []string
+var (
+	watchMode   bool
+	serverMode  bool
+	configFile  string
+	showVersion bool
+	runCommand  []string
+)
 
 type pipeline struct {
 	inpath  string
@@ -61,6 +66,7 @@ func init() {
 
 	flag.StringVar(&configFile, "f", "./tmpl.config.json", "path to tmpl config file")
 	flag.BoolVar(&watchMode, "w", false, "run in watch mode")
+	flag.BoolVar(&serverMode, "s", false, "run in watch mode and serve")
 	flag.BoolVar(&showVersion, "v", false, "show version information")
 }
 
@@ -221,19 +227,17 @@ func (p *pipeline) run() error {
 	}
 	defer out.Close()
 
-	t := tmpl.New()
-
 	switch p.format {
 	case "html":
-		if err := t.WriteHTML(out, in, p.minify); err != nil {
+		if err := tmpl.New().HTML().WithMinify(p.minify).Execute(out, in); err != nil {
 			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
 		}
 	case "json":
-		if err := t.WriteJSON(out, in, p.minify); err != nil {
+		if err := tmpl.New().JSON().WithMinify(p.minify).Execute(out, in); err != nil {
 			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
 		}
 	default:
-		if err := t.WriteText(out, in); err != nil {
+		if err := tmpl.New().Text().Execute(out, in); err != nil {
 			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
 		}
 	}
