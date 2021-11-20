@@ -6,6 +6,7 @@ func (t *Tmpl) funcs() map[string]interface{} {
 	return map[string]interface{}{
 		"add":          tmplfunc.Add,
 		"asset":        tmplfunc.Asset,
+		"autoreload":   tmplfunc.Autoreload,
 		"env":          tmplfunc.EnvFunc(t.envVars),
 		"file":         tmplfunc.File,
 		"formatTime":   tmplfunc.FormatTime,

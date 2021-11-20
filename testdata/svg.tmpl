@@ -13,8 +13,6 @@
         <div class="svg-container">
             {{ svg "testdata/test.svg" }}
         </div>
-        <script>fetch('/__tmpl').then(function() {
-            top.location.reload()
-        })</script>
+        {{ autoreload }}
     </body>
 </html>
