@@ -10,5 +10,15 @@ github.com/tdewolff/parse
 github.com/tdewolff/parse/buffer
 github.com/tdewolff/parse/html
 github.com/tdewolff/parse/strconv
+# github.com/yuin/goldmark v1.4.4
+github.com/yuin/goldmark
+github.com/yuin/goldmark/ast
+github.com/yuin/goldmark/extension
+github.com/yuin/goldmark/extension/ast
+github.com/yuin/goldmark/parser
+github.com/yuin/goldmark/renderer
+github.com/yuin/goldmark/renderer/html
+github.com/yuin/goldmark/text
+github.com/yuin/goldmark/util
 # golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9
 golang.org/x/sys/unix

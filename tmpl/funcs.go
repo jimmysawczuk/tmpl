@@ -14,6 +14,7 @@ func (t *Tmpl) funcs() map[string]interface{} {
 		"inline":       tmplfunc.Inline(t),
 		"jsonify":      tmplfunc.JSONify,
 		"link":         tmplfunc.Link(t),
+		"markdown":     tmplfunc.Markdown,
 		"now":          tmplfunc.NowFunc(t.now),
 		"parseTime":    tmplfunc.ParseTime,
 		"safeCSS":      tmplfunc.SafeCSS,
