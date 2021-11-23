@@ -39,6 +39,7 @@ type pipeline struct {
 	outpath string
 	format  string
 
+	mode   tmpl.Mode
 	minify bool
 	env    map[string]string
 
@@ -126,6 +127,11 @@ func run() error {
 		defer watcher.Close()
 	}
 
+	mode := tmpl.ModeProduction
+	if watchMode || serverMode {
+		mode = tmpl.ModeLocal
+	}
+
 	pipelines := []pipeline{}
 
 	for i, b := range blocks {
@@ -134,6 +140,7 @@ func run() error {
 			format: b.Format,
 			minify: b.Options.Minify,
 			env:    b.Options.Env,
+			mode:   mode,
 		}
 
 		pipe.inpath, _ = filepath.Abs(b.In)
@@ -295,11 +302,11 @@ func (p *pipeline) run() error {
 	var t Tmpl
 	switch p.format {
 	case "html":
-		t = tmpl.New().WithBaseDir(baseDir).WithIO(in, out).HTML().WithMinify(p.minify)
+		t = tmpl.New().WithMode(p.mode).WithBaseDir(baseDir).WithIO(in, out).HTML().WithMinify(p.minify)
 	case "json":
-		t = tmpl.New().WithBaseDir(baseDir).WithIO(in, out).JSON().WithMinify(p.minify)
+		t = tmpl.New().WithMode(p.mode).WithBaseDir(baseDir).WithIO(in, out).JSON().WithMinify(p.minify)
 	default:
-		t = tmpl.New().WithBaseDir(baseDir).WithIO(in, out)
+		t = tmpl.New().WithMode(p.mode).WithBaseDir(baseDir).WithIO(in, out)
 	}
 
 	if err := t.Execute(out, in); err != nil {

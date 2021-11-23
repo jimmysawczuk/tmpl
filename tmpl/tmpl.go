@@ -21,14 +21,18 @@ type Executor interface {
 	Execute(io.Writer, interface{}) error
 }
 
-type Parser interface {
-	Parse(string) (Executor, error)
-}
+type Mode int
+
+const (
+	ModeLocal      Mode = 0
+	ModeProduction Mode = iota
+)
 
 type Tmpl struct {
 	Hostname string
 	GoEnv    goEnv
 
+	mode    Mode
 	in      *os.File
 	out     *os.File
 	baseDir string
@@ -66,6 +70,11 @@ func (t *Tmpl) WithBaseDir(dir string) *Tmpl {
 	return t
 }
 
+func (t *Tmpl) WithMode(mode Mode) *Tmpl {
+	t.mode = mode
+	return t
+}
+
 func (t *Tmpl) In() *os.File {
 	return t.in
 }
@@ -76,6 +85,10 @@ func (t *Tmpl) Out() *os.File {
 
 func (t *Tmpl) BaseDir() string {
 	return t.baseDir
+}
+
+func (t *Tmpl) IsProduction() bool {
+	return t.mode == ModeProduction
 }
 
 func (t *Tmpl) HTML() *HTMLTmpl {

@@ -16,3 +16,7 @@ type FilesystemDepender interface {
 	Depender
 	Filesystem
 }
+
+type Moder interface {
+	IsProduction() bool
+}
