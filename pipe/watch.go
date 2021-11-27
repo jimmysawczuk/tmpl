@@ -92,7 +92,7 @@ func (w *Watcher) Watch(notify chan string) {
 			}
 
 			if event.Op&fsnotify.Write == fsnotify.Write {
-				log.Println("changed:", event.Name)
+				log.Println("changed:", event.Name, event.Op)
 
 				for path, pipe := range w.pipes {
 					if path == event.Name {
@@ -113,14 +113,21 @@ func (w *Watcher) Watch(notify chan string) {
 							log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.In))
 						}
 						log.Println(" --> wrote:", pipe.Out)
+
+						pipe.AttachRefs(w)
 					}
 				}
 			}
 
-			select {
-			case notify <- event.Name:
-				log.Println(" ! notified listener")
-			default:
+			for {
+				select {
+				case notify <- event.Name:
+					log.Println(" --> ! notified listener")
+					continue
+				default:
+				}
+
+				break
 			}
 
 		case err, ok := <-w.w.Errors:

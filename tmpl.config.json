@@ -1,7 +1,7 @@
 [
 	{
-		"in": "testdata/index.tmpl",
-		"out": "testdata/out/index.html",
+		"in": "testdata/main.tmpl",
+		"out": "testdata/out/main.html",
 		"format": "html"
 	},
 	{

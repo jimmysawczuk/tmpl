@@ -2,7 +2,8 @@
 <html>
     <head>
         <title>Test for {{ now | formatTime "3:04 PM" }}</title>
-        {{ link "testdata/style.css" "stylesheet" "text/css" }}
+        {{- ref "testdata/style.css" }}
+        <link href="/testdata/style.css" rel="stylesheet" type="text/css" />
         <style type="text/css">
             body {
                 font-family: Arial, Helvetica, sans-serif;

@@ -1,4 +1,17 @@
+body {
+	display: grid;
+	height: 100vh;
+	place-items: center;
+	background: #f9f9f9;
+}
+
 .svg-container {
-	width: 64px;
-	color: navy;
+	width: 128px;
+	margin: 0px auto;
+	color: #222;
+}
+
+.svg-container .fa-secondary {
+	fill: #555;
+	opacity: 1;
 }

@@ -10,6 +10,6 @@ func Autoreload(m Moder) func() template.HTML {
 			return template.HTML("")
 		}
 
-		return SafeHTML(`<script>fetch('/__tmpl').then(function(){console.log("Change detected, reloading!");top.location.reload()})</script>`)
+		return SafeHTML(`<script>fetch('/__tmpl').then(function(){console.log("tmpl: change detected, reloading!");top.location.reload()})</script>`)
 	}
 }
