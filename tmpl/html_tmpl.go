@@ -27,7 +27,7 @@ func (t *HTMLTmpl) Execute(out io.Writer, in io.Reader) error {
 		return errors.Wrap(err, "io: copy (input)")
 	}
 
-	tmpl, err := html.New("output").Funcs(t.Tmpl.funcs()).Parse(buf.String())
+	tmpl, err := html.New("output").Funcs(t.funcs()).Parse(buf.String())
 	if err != nil {
 		return errors.Wrap(err, "compile template")
 	}
