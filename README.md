@@ -32,9 +32,43 @@ Here's a sample configuration file:
 ]
 ```
 
+## Functions
+
+In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Functions) provided by the `text/template` package, these functions are available in every template:
+
+| Function       |
+| -------------- |
+| `add`          |
+| `asset`        |
+| `autoreload`   |
+| `env`          |
+| `file`         |
+| `formatTime`   |
+| `getJSON`      |
+| `inline`       |
+| `jsonify`      |
+| `markdown`     |
+| `now`          |
+| `parseTime`    |
+| `ref`          |
+| `safeCSS`      |
+| `safeHTML`     |
+| `safeHTMLAttr` |
+| `safeJS`       |
+| `seq`          |
+| `sub`          |
+| `svg`          |
+| `timeIn`       |
+
 ## Watch mode
 
-You can pass the `-w` flag to tmpl to watch the input templates for changes and automatically execute them as they're changed.
+Watch mode (`-w`) watches all of the templates in your config for changes and rebuilds them when they're changed. Additionally, any files referenced in your templates via `ref` or similar template functions will trigger a rebuild of the template.
+
+## Server mode
+
+Server mode (`-s`) is the same as watch mode except it also spins up a webserver that will serve the base directory.
+
+Additionally, this webserver has an endpoint (`/__tmpl`) which will resolve when a change is made. You can use the `autoreload` function in your template to automatically reload the page when this endpoint resolves.
 
 ## Subcommand
 
@@ -49,5 +83,3 @@ $ tmpl -w -- webpack -w --mode=development
 ## License
 
 [MIT](/LICENSE)
-
-

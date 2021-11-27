@@ -2,16 +2,19 @@ body {
 	display: grid;
 	height: 100vh;
 	place-items: center;
-	background: #f9f9f9;
+	background: #f1f1f1;
+	transition: all 0.5s;
 }
 
 .svg-container {
 	width: 128px;
 	margin: 0px auto;
 	color: #222;
+	transition: all 0.5s;
 }
 
 .svg-container .fa-secondary {
 	fill: #555;
 	opacity: 1;
+	transition: all 0.5s;
 }

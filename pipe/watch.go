@@ -117,17 +117,18 @@ func (w *Watcher) Watch(notify chan string) {
 						pipe.AttachRefs(w)
 					}
 				}
-			}
 
-			for {
-				select {
-				case notify <- event.Name:
-					log.Println(" --> ! notified listener")
-					continue
-				default:
+				for {
+					select {
+					case notify <- event.Name:
+						log.Println(" --> ! notified listener")
+						continue
+					default:
+						log.Println("nothing to notify!")
+					}
+
+					break
 				}
-
-				break
 			}
 
 		case err, ok := <-w.w.Errors:
