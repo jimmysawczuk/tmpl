@@ -2,8 +2,8 @@ package tmplfunc
 
 import "os"
 
-type Depender interface {
-	Depend(string) error
+type Refer interface {
+	Ref(string) error
 }
 
 type Filesystem interface {
@@ -12,8 +12,8 @@ type Filesystem interface {
 	BaseDir() string
 }
 
-type FilesystemDepender interface {
-	Depender
+type FilesystemRefer interface {
+	Refer
 	Filesystem
 }
 

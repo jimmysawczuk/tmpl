@@ -17,10 +17,6 @@ type goEnv struct {
 	Ver  string
 }
 
-type Executor interface {
-	Execute(io.Writer, interface{}) error
-}
-
 type Mode int
 
 const (
@@ -40,7 +36,7 @@ type Tmpl struct {
 	now     time.Time
 	envVars map[string]string
 
-	dependencies []string
+	refs map[string]struct{}
 }
 
 func New() *Tmpl {
@@ -53,7 +49,8 @@ func New() *Tmpl {
 			OS:   runtime.GOOS,
 			Arch: runtime.GOARCH,
 		},
-		now: time.Now(),
+		now:  time.Now(),
+		refs: map[string]struct{}{},
 	}
 
 	return t
@@ -108,13 +105,19 @@ func (t *Tmpl) WithEnv(m map[string]string) *Tmpl {
 	return t
 }
 
-func (t *Tmpl) Depend(path string) error {
-	t.dependencies = append(t.dependencies, path)
+func (t *Tmpl) Ref(path string) error {
+	t.refs[path] = struct{}{}
 	return nil
 }
 
-func (t *Tmpl) Dependencies() []string {
-	return t.dependencies
+func (t *Tmpl) Refs() []string {
+	tbr := make([]string, len(t.refs))
+	i := 0
+	for k := range t.refs {
+		tbr[i] = k
+		i++
+	}
+	return tbr
 }
 
 func (t *Tmpl) Execute(out io.Writer, in io.Reader) error {

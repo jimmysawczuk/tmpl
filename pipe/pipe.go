@@ -2,6 +2,7 @@ package pipe
 
 import (
 	"io"
+	"log"
 	"os"
 
 	"github.com/jimmysawczuk/tmpl/tmpl"
@@ -20,12 +21,12 @@ type Pipe struct {
 	Env    map[string]string
 	Params map[string]interface{}
 
-	deps []string
+	refs []string
 }
 
 type executor interface {
 	Execute(io.Writer, io.Reader) error
-	Dependencies() []string
+	Refs() []string
 }
 
 func (p *Pipe) Run() error {
@@ -55,7 +56,15 @@ func (p *Pipe) Run() error {
 		return errors.Wrapf(err, "execute (%T, in: %s)", t, in)
 	}
 
-	// TODO: pipe dependencies up to refs
+	p.refs = t.Refs()
 
 	return nil
+}
+
+func (p *Pipe) AttachRefs(w *Watcher) {
+	for _, ref := range p.refs {
+		if err := w.AddRef(ref, p); err != nil {
+			log.Printf("watcher: attach refs: %s", err)
+		}
+	}
 }

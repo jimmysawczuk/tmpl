@@ -145,6 +145,8 @@ func run() error {
 		if err := pipe.Run(); err != nil {
 			return errors.Wrapf(err, "run pipeline (path: %s)", pipe.In)
 		}
+
+		pipe.AttachRefs(watcher)
 	}
 
 	var cmd *exec.Cmd

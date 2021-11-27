@@ -48,13 +48,16 @@ func (w *Watcher) AddPipe(p *Pipe) error {
 		return nil
 	}
 
+	path, err := filepath.Abs(p.In)
+	if err != nil {
+		return errors.Errorf("filepath: abs (path: %s)", p.In)
+	}
+
 	// TODO: check for existence here too?
 
-	w.w.Add(p.In)
+	w.w.Add(path)
 
-	log.Println("root:", p.In)
-
-	if _, ok := w.pipes[p.In]; !ok {
+	if _, ok := w.pipes[path]; !ok {
 		w.pipes[p.In] = p
 	}
 
@@ -66,13 +69,13 @@ func (w *Watcher) AddRef(ref string, pipe *Pipe) error {
 		return nil
 	}
 
-	abs, err := filepath.Abs(ref)
+	path, err := filepath.Abs(ref)
 	if err != nil {
-		return errors.Wrap(err, "filepath: abs (dep)")
+		return errors.Errorf("filepath: abs (path: %s)", ref)
 	}
 
-	w.w.Add(abs)
-	w.refs[abs] = pipe
+	w.w.Add(path)
+	w.refs[path] = pipe
 	return nil
 }
 
@@ -97,6 +100,9 @@ func (w *Watcher) Watch(notify chan string) {
 							log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.In))
 						}
 						log.Println(" --> wrote:", pipe.Out)
+
+						pipe.AttachRefs(w)
+
 						continue
 					}
 				}
