@@ -36,29 +36,27 @@ Here's a sample configuration file:
 
 In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Functions) provided by the `text/template` package, these functions are available in every template:
 
-|                |
-| -------------- |
-| `add`          |
-| `asset`        |
-| `autoreload`   |
-| `env`          |
-| `file`         |
-| `formatTime`   |
-| `getJSON`      |
-| `inline`       |
-| `jsonify`      |
-| `markdown`     |
-| `now`          |
-| `parseTime`    |
-| `ref`          |
-| `safeCSS`      |
-| `safeHTML`     |
-| `safeHTMLAttr` |
-| `safeJS`       |
-| `seq`          |
-| `sub`          |
-| `svg`          |
-| `timeIn`       |
+-   [`add`](#add)
+-   [`asset`](#asset)
+-   [`autoreload`](#autoreload)
+-   [`env`](#env)
+-   [`file`](#file)
+-   [`formatTime`](#formatTime)
+-   [`getJSON`](#getJSON)
+-   [`inline`](#inline)
+-   [`jsonify`](#jsonify)
+-   [`markdown`](#markdown)
+-   [`now`](#now)
+-   [`parseTime`](#parseTime)
+-   [`ref`](#ref)
+-   [`safeCSS`](#safeCSS)
+-   [`safeHTML`](#safeHTML)
+-   [`safeHTMLAttr`](#safeHTMLAttr)
+-   [`safeJS`](#safeJS)
+-   [`seq`](#seq)
+-   [`sub`](#sub)
+-   [`svg`](#svg)
+-   [`timeIn`](#timeIn)
 
 ### `add`
 
