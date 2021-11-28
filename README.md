@@ -160,6 +160,64 @@ map[string]interface{}{
 }
 ```
 
+### `inline`
+
+> inline loads the file at the path provided and returns its contents. It creates a ref so that updates to the file trigger an update in watch mode.
+
+```
+{{ file "some-letter.txt" }}
+```
+
+returns
+
+```
+...data...
+```
+
+### `jsonify`
+
+> jsonify marshals the provided input as a JSON string.
+
+```
+{{ now | jsonify }}
+```
+
+returns
+
+```
+"2021-11-28T10:09:00Z"
+```
+
+### `markdown`
+
+> markdown reads the file at the provided path, parses its contents as Markdown and returns the HTML. It creates a ref so that updates to the file trigger an update in watch mode.
+
+```
+{{ markdown "path-to-markdown.md" }}
+```
+
+returns
+
+```
+<h1>...</h1>
+
+<p>...</p>
+```
+
+### `now`
+
+> now returns the time of the template's execution in the local timezone.
+
+```
+{{ now | jsonify }}
+```
+
+returns
+
+```
+"2021-11-28T10:09:00Z"
+```
+
 ## Watch mode
 
 Watch mode (`-w`) watches all of the templates in your config for changes and rebuilds them when they're changed. Additionally, any files referenced in your templates via `ref` or similar template functions will trigger a rebuild of the template.
