@@ -36,7 +36,7 @@ Here's a sample configuration file:
 
 In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Functions) provided by the `text/template` package, these functions are available in every template:
 
-| Function       |
+|                |
 | -------------- |
 | `add`          |
 | `asset`        |
@@ -59,6 +59,48 @@ In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Fun
 | `sub`          |
 | `svg`          |
 | `timeIn`       |
+
+### `add`
+
+> Add returns the sum of the two arguments.
+
+```
+{{ add 2 2 }}
+```
+
+returns:
+
+```
+4
+```
+
+### `asset`
+
+> Asset returns the path provided. In the future, Asset may gain the ability to clean or validate the path.
+
+```
+{{ asset "/css/style.css" }}
+```
+
+returns
+
+```
+/css/style.css
+```
+
+### `autoreload`
+
+> Autoreload returns an HTML snippet that you can embed in your templates to automatically reload the page when a change is detected.
+
+```
+{{ autoreload }}
+```
+
+returns
+
+```
+<script>...</script>
+```
 
 ## Watch mode
 
