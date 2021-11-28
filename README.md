@@ -60,7 +60,7 @@ In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Fun
 
 ### `add`
 
-> Add returns the sum of the two arguments.
+> add returns the sum of the two arguments.
 
 ```
 {{ add 2 2 }}
@@ -74,7 +74,7 @@ returns:
 
 ### `asset`
 
-> Asset returns the path provided. In the future, Asset may gain the ability to clean or validate the path.
+> asset returns the path provided. In the future, asset may gain the ability to clean or validate the path.
 
 ```
 {{ asset "/css/style.css" }}
@@ -88,7 +88,7 @@ returns
 
 ### `autoreload`
 
-> Autoreload returns an HTML snippet that you can embed in your templates to automatically reload the page when a change is detected.
+> autoreload returns an HTML snippet that you can embed in your templates to automatically reload the page when a change is detected.
 
 ```
 {{ autoreload }}
@@ -98,6 +98,66 @@ returns
 
 ```
 <script>...</script>
+```
+
+### `env`
+
+> env returns the environment variable defined at the provided key. Variables set in `tmpl.config.json` take precedence.
+
+```
+{{ env "NODE_ENV" }}
+```
+
+returns
+
+```
+production
+```
+
+### `file`
+
+> file loads the file at the path provided and returns its contents. It _does not_ create a ref; updating this file's contents won't trigger an update in watch mode.
+
+```
+{{ file "some-letter.txt" }}
+```
+
+returns
+
+```
+...data...
+```
+
+### `formatTime`
+
+> formatTime formats the provided time with the provided format. You can either specify both arguments at once or pipe a `time.Time` into this function to format it.
+
+```
+{{ now | formatTime "Jan 2, 2006 3:04 PM" }}
+{{ formatTime now "Jan 2, 2006 3:04 PM" }}
+```
+
+returns
+
+```
+Nov 28, 2021 10:09 AM
+Nov 28, 2021 10:09 AM
+```
+
+### `getJSON`
+
+> getJSON loads the file at the provided path and unmarshals it into a `map[string]interface{}`. It _does not_ create a ref; updating this file's contents won't trigger an update in watch mode.
+
+```
+{{ getJSON "REVISION.json" }}
+```
+
+returns
+
+```
+map[string]interface{}{
+    ...
+}
 ```
 
 ## Watch mode
