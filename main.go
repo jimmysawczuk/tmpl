@@ -36,7 +36,15 @@ var (
 
 func init() {
 	flag.Usage = func() {
-		fmt.Printf("tmpl %s; built %s (rev. %s)\n\n", version, date, revision)
+		t, _ := time.Parse(time.RFC3339, date)
+		rev := revision
+		if len(rev) > 8 {
+			rev = rev[0:8]
+		}
+
+		fmt.Printf("tmpl %s\n", version)
+		fmt.Printf("  built: %s\n", t.UTC().Format("2-Jan-2006 15:04:05"))
+		fmt.Printf("  rev:   %s\n\n", rev)
 
 		fmt.Printf("Usage:\n")
 		fmt.Printf("  tmpl [options] [-- command]\n\n")
