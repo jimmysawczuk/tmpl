@@ -66,7 +66,7 @@ In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Fun
 {{ add 2 2 }}
 ```
 
-returns:
+returns
 
 ```
 4
@@ -217,6 +217,108 @@ returns
 ```
 "2021-11-28T10:09:00Z"
 ```
+
+### `parseTime`
+
+> parseTime returns a `time.Time` from the provided string in RFC3339 format.
+
+```
+{{ parseTime "2021-11-28T10:09:00Z" }}
+```
+
+returns
+
+```
+a time.Time
+```
+
+### `ref`
+
+> ref creates a ref to the provided path so that an automatic update is triggered when the file at that path is changed. ref produces no output.
+
+```
+{{ ref "public/style.css" }}
+```
+
+returns
+
+```
+
+```
+
+### `safeCSS`
+
+### `safeHTML`
+
+### `safeHTMLAttr`
+
+### `safeJS`
+
+> The `safe*` functions mark their inputs as "safe" so they're not further escaped. See the documentation for [CSS](https://pkg.go.dev/html/template#CSS), [HTML](https://pkg.go.dev/html/template#HTML), [HTMLAttr](https://pkg.go.dev/html/template#HTMLAttr), and [JS](https://pkg.go.dev/html/template#JS) in `html/template`.
+
+### `seq`
+
+> seq returns a slice of `n` elements. Useful for `range`.
+
+```
+{{ seq 5 }}
+{{ range seq 3 }}
+Hello!
+{{ end }}
+```
+
+returns
+
+```
+[0, 1, 2, 3, 4]
+Hello!
+Hello!
+Hello!
+```
+
+### `sub`
+
+> sub returns the difference between the two arguments.
+
+```
+{{ sub 3 2 }}
+```
+
+returns
+
+```
+1
+```
+
+### `svg`
+
+> svg reads the file at the provided path and returns its contents. It creates a ref so that updates to the file trigger an update in watch mode.
+
+```
+{{ svg "path-to-svg.svg" }}
+```
+
+returns
+
+```
+<svg>...</svg>
+```
+
+### `timeIn`
+
+> timeIn returns the provided time in the provided timezone.
+
+```
+{{ now | timeIn "America/Los_Angeles" | jsonify }}
+```
+
+returns
+
+```
+"2021-11-28T02:09:00-0800"
+```
+
+---
 
 ## Watch mode
 
