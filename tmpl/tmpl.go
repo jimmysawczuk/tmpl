@@ -2,18 +2,13 @@ package tmpl
 
 import (
 	"bytes"
-	"encoding/json"
-	html "html/template"
 	"io"
 	"os"
 	"runtime"
 	text "text/template"
 	"time"
 
-	"github.com/jimmysawczuk/tmpl/tmpl/tmplfunc"
 	"github.com/pkg/errors"
-	"github.com/tdewolff/minify"
-	htmlminify "github.com/tdewolff/minify/html"
 )
 
 type goEnv struct {
@@ -22,25 +17,86 @@ type goEnv struct {
 	Ver  string
 }
 
+type Mode int
+
+const (
+	ModeLocal      Mode = 0
+	ModeProduction Mode = iota
+)
+
 type Tmpl struct {
 	Hostname string
 	GoEnv    goEnv
 
+	mode    Mode
+	in      *os.File
+	out     *os.File
+	baseDir string
+
 	now     time.Time
 	envVars map[string]string
+
+	refs map[string]struct{}
 }
 
-func New() Tmpl {
+func New() *Tmpl {
 	h, _ := os.Hostname()
 
-	return Tmpl{
+	t := &Tmpl{
 		Hostname: h,
 		GoEnv: goEnv{
 			Ver:  runtime.Version(),
 			OS:   runtime.GOOS,
 			Arch: runtime.GOARCH,
 		},
-		now: time.Now(),
+		now:  time.Now(),
+		refs: map[string]struct{}{},
+	}
+
+	return t
+}
+
+func (t *Tmpl) WithIO(in, out *os.File) *Tmpl {
+	t.in = in
+	t.out = out
+	return t
+}
+
+func (t *Tmpl) WithBaseDir(dir string) *Tmpl {
+	t.baseDir = dir
+	return t
+}
+
+func (t *Tmpl) WithMode(mode Mode) *Tmpl {
+	t.mode = mode
+	return t
+}
+
+func (t *Tmpl) In() *os.File {
+	return t.in
+}
+
+func (t *Tmpl) Out() *os.File {
+	return t.out
+}
+
+func (t *Tmpl) BaseDir() string {
+	return t.baseDir
+}
+
+func (t *Tmpl) IsProduction() bool {
+	return t.mode == ModeProduction
+}
+
+func (t *Tmpl) HTML() *HTMLTmpl {
+	return &HTMLTmpl{
+		Tmpl: t,
+	}
+}
+
+func (t *Tmpl) JSON() *JSONTmpl {
+	return &JSONTmpl{
+		Tmpl: t,
 	}
 }
 
@@ -49,99 +105,22 @@ func (t *Tmpl) WithEnv(m map[string]string) *Tmpl {
 	return t
 }
 
-func (t *Tmpl) funcs() map[string]interface{} {
-	return map[string]interface{}{
-		"add":          tmplfunc.Add,
-		"asset":        tmplfunc.Asset,
-		"env":          tmplfunc.EnvFunc(t.envVars),
-		"file":         tmplfunc.File,
-		"formatTime":   tmplfunc.FormatTime,
-		"getJSON":      tmplfunc.GetJSON,
-		"jsonify":      tmplfunc.JSONify,
-		"now":          tmplfunc.NowFunc(t.now),
-		"parseTime":    tmplfunc.ParseTime,
-		"safeCSS":      tmplfunc.SafeCSS,
-		"safeHTML":     tmplfunc.SafeHTML,
-		"safeHTMLAttr": tmplfunc.SafeAttr,
-		"safeJS":       tmplfunc.SafeJS,
-		"seq":          tmplfunc.Seq,
-		"sub":          tmplfunc.Sub,
-		"svg":          tmplfunc.SVG,
-		"timeIn":       tmplfunc.TimeIn,
-	}
-}
-
-func (t Tmpl) WriteHTML(out io.Writer, in io.Reader, min bool) error {
-	buf := bytes.Buffer{}
-	if _, err := io.Copy(&buf, in); err != nil {
-		return errors.Wrap(err, "io: copy (input)")
-	}
-
-	tmpl, err := html.New("output").Funcs(t.funcs()).Parse(buf.String())
-	if err != nil {
-		return errors.Wrap(err, "compile template")
-	}
-
-	buf.Reset()
-
-	if err := tmpl.Execute(&buf, t); err != nil {
-		return errors.Wrap(err, "execute template")
-	}
-
-	if min {
-		by := buf.Bytes()
-		buf.Reset()
-
-		m := minify.New()
-		hm := htmlminify.DefaultMinifier
-		hm.KeepDocumentTags = true
-
-		hm.Minify(m, &buf, bytes.NewReader(by), nil)
-	}
-
-	if _, err := io.Copy(out, &buf); err != nil {
-		return errors.Wrap(err, "io: copy (output)")
-	}
-
+func (t *Tmpl) Ref(path string) error {
+	t.refs[path] = struct{}{}
 	return nil
 }
 
-func (t Tmpl) WriteJSON(out io.Writer, in io.Reader, min bool) error {
-	buf := bytes.Buffer{}
-	if _, err := io.Copy(&buf, in); err != nil {
-		return errors.Wrap(err, "io: copy (input)")
+func (t *Tmpl) Refs() []string {
+	tbr := make([]string, len(t.refs))
+	i := 0
+	for k := range t.refs {
+		tbr[i] = k
+		i++
 	}
-
-	tmpl, err := text.New("output").Funcs(t.funcs()).Parse(buf.String())
-	if err != nil {
-		return errors.Wrap(err, "compile template")
-	}
-
-	buf.Reset()
-
-	if err := tmpl.Execute(&buf, t); err != nil {
-		errors.Wrap(err, "execute template")
-	}
-
-	dst := bytes.Buffer{}
-	if min {
-		if err := json.Compact(&dst, buf.Bytes()); err != nil {
-			return errors.Wrap(err, "json: compact")
-		}
-	} else {
-		if err := json.Indent(&dst, buf.Bytes(), "", "    "); err != nil {
-			return errors.Wrap(err, "json: indent")
-		}
-	}
-
-	if _, err := io.Copy(out, &dst); err != nil {
-		return errors.Wrap(err, "io: copy (output)")
-	}
-
-	return nil
+	return tbr
 }
 
-func (t Tmpl) WriteText(out io.Writer, in io.Reader) error {
+func (t *Tmpl) Execute(out io.Writer, in io.Reader) error {
 	buf := bytes.Buffer{}
 	if _, err := io.Copy(&buf, in); err != nil {
 		return errors.Wrap(err, "io: copy (input)")

@@ -1,7 +1,7 @@
 [
 	{
-		"in": "testdata/index.tmpl",
-		"out": "testdata/out/index.html",
+		"in": "testdata/main.tmpl",
+		"out": "testdata/out/main.html",
 		"format": "html"
 	},
 	{
@@ -13,6 +13,14 @@
 		"in": "testdata/json.tmpl",
 		"out": "testdata/out/json.min.json",
 		"format": "json",
+		"options": {
+			"minify": true
+		}
+	},
+	{
+		"in": "testdata/svg.tmpl",
+		"out": "testdata/out/svg.html",
+		"format": "html",
 		"options": {
 			"minify": true
 		}

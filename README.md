@@ -32,9 +32,303 @@ Here's a sample configuration file:
 ]
 ```
 
+## Functions
+
+In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Functions) provided by the `text/template` package, these functions are available in every template:
+
+-   [`add`](#add)
+-   [`asset`](#asset)
+-   [`autoreload`](#autoreload)
+-   [`env`](#env)
+-   [`file`](#file)
+-   [`formatTime`](#formatTime)
+-   [`getJSON`](#getJSON)
+-   [`inline`](#inline)
+-   [`jsonify`](#jsonify)
+-   [`markdown`](#markdown)
+-   [`now`](#now)
+-   [`parseTime`](#parseTime)
+-   [`ref`](#ref)
+-   [`safeCSS`](#safeCSS)
+-   [`safeHTML`](#safeHTML)
+-   [`safeHTMLAttr`](#safeHTMLAttr)
+-   [`safeJS`](#safeJS)
+-   [`seq`](#seq)
+-   [`sub`](#sub)
+-   [`svg`](#svg)
+-   [`timeIn`](#timeIn)
+
+### `add`
+
+> add returns the sum of the two arguments.
+
+```
+{{ add 2 2 }}
+```
+
+returns
+
+```
+4
+```
+
+### `asset`
+
+> asset returns the path provided. In the future, asset may gain the ability to clean or validate the path.
+
+```
+{{ asset "/css/style.css" }}
+```
+
+returns
+
+```
+/css/style.css
+```
+
+### `autoreload`
+
+> autoreload returns an HTML snippet that you can embed in your templates to automatically reload the page when a change is detected.
+
+```
+{{ autoreload }}
+```
+
+returns
+
+```
+<script>...</script>
+```
+
+### `env`
+
+> env returns the environment variable defined at the provided key. Variables set in `tmpl.config.json` take precedence.
+
+```
+{{ env "NODE_ENV" }}
+```
+
+returns
+
+```
+production
+```
+
+### `file`
+
+> file loads the file at the path provided and returns its contents. It _does not_ create a ref; updating this file's contents won't trigger an update in watch mode.
+
+```
+{{ file "some-letter.txt" }}
+```
+
+returns
+
+```
+...data...
+```
+
+### `formatTime`
+
+> formatTime formats the provided time with the provided format. You can either specify both arguments at once or pipe a `time.Time` into this function to format it.
+
+```
+{{ now | formatTime "Jan 2, 2006 3:04 PM" }}
+{{ formatTime now "Jan 2, 2006 3:04 PM" }}
+```
+
+returns
+
+```
+Nov 28, 2021 10:09 AM
+Nov 28, 2021 10:09 AM
+```
+
+### `getJSON`
+
+> getJSON loads the file at the provided path and unmarshals it into a `map[string]interface{}`. It _does not_ create a ref; updating this file's contents won't trigger an update in watch mode.
+
+```
+{{ getJSON "REVISION.json" }}
+```
+
+returns
+
+```
+map[string]interface{}{
+    ...
+}
+```
+
+### `inline`
+
+> inline loads the file at the path provided and returns its contents. It creates a ref so that updates to the file trigger an update in watch mode.
+
+```
+{{ file "some-letter.txt" }}
+```
+
+returns
+
+```
+...data...
+```
+
+### `jsonify`
+
+> jsonify marshals the provided input as a JSON string.
+
+```
+{{ now | jsonify }}
+```
+
+returns
+
+```
+"2021-11-28T10:09:00Z"
+```
+
+### `markdown`
+
+> markdown reads the file at the provided path, parses its contents as Markdown and returns the HTML. It creates a ref so that updates to the file trigger an update in watch mode.
+
+```
+{{ markdown "path-to-markdown.md" }}
+```
+
+returns
+
+```
+<h1>...</h1>
+
+<p>...</p>
+```
+
+### `now`
+
+> now returns the time of the template's execution in the local timezone.
+
+```
+{{ now | jsonify }}
+```
+
+returns
+
+```
+"2021-11-28T10:09:00Z"
+```
+
+### `parseTime`
+
+> parseTime returns a `time.Time` from the provided string in RFC3339 format.
+
+```
+{{ parseTime "2021-11-28T10:09:00Z" }}
+```
+
+returns
+
+```
+a time.Time
+```
+
+### `ref`
+
+> ref creates a ref to the provided path so that an automatic update is triggered when the file at that path is changed. ref produces no output.
+
+```
+{{ ref "public/style.css" }}
+```
+
+returns
+
+```
+
+```
+
+### `safeCSS`
+
+### `safeHTML`
+
+### `safeHTMLAttr`
+
+### `safeJS`
+
+> The `safe*` functions mark their inputs as "safe" so they're not further escaped. See the documentation for [CSS](https://pkg.go.dev/html/template#CSS), [HTML](https://pkg.go.dev/html/template#HTML), [HTMLAttr](https://pkg.go.dev/html/template#HTMLAttr), and [JS](https://pkg.go.dev/html/template#JS) in `html/template`.
+
+### `seq`
+
+> seq returns a slice of `n` elements. Useful for `range`.
+
+```
+{{ seq 5 }}
+{{ range seq 3 }}
+Hello!
+{{ end }}
+```
+
+returns
+
+```
+[0, 1, 2, 3, 4]
+Hello!
+Hello!
+Hello!
+```
+
+### `sub`
+
+> sub returns the difference between the two arguments.
+
+```
+{{ sub 3 2 }}
+```
+
+returns
+
+```
+1
+```
+
+### `svg`
+
+> svg reads the file at the provided path and returns its contents. It creates a ref so that updates to the file trigger an update in watch mode.
+
+```
+{{ svg "path-to-svg.svg" }}
+```
+
+returns
+
+```
+<svg>...</svg>
+```
+
+### `timeIn`
+
+> timeIn returns the provided time in the provided timezone.
+
+```
+{{ now | timeIn "America/Los_Angeles" | jsonify }}
+```
+
+returns
+
+```
+"2021-11-28T02:09:00-0800"
+```
+
+---
+
 ## Watch mode
 
-You can pass the `-w` flag to tmpl to watch the input templates for changes and automatically execute them as they're changed.
+Watch mode (`-w`) watches all of the templates in your config for changes and rebuilds them when they're changed. Additionally, any files referenced in your templates via `ref` or similar template functions will trigger a rebuild of the template.
+
+## Server mode
+
+Server mode (`-s`) is the same as watch mode except it also spins up a webserver that will serve the base directory.
+
+Additionally, this webserver has an endpoint (`/__tmpl`) which will resolve when a change is made. You can use the `autoreload` function in your template to automatically reload the page when this endpoint resolves.
 
 ## Subcommand
 
@@ -49,5 +343,3 @@ $ tmpl -w -- webpack -w --mode=development
 ## License
 
 [MIT](/LICENSE)
-
-

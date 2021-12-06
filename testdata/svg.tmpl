@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test for {{ now | formatTime "3:04 PM" }}</title>
+        {{- ref "testdata/style.css" }}
+        <link href="/testdata/style.css" rel="stylesheet" type="text/css" />
+        <style type="text/css">
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="svg-container">
+            {{ svg "testdata/test.svg" }}
+        </div>
+        {{ autoreload }}
+    </body>
+</html>

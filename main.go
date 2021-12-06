@@ -5,53 +5,46 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/fsnotify/fsnotify"
+	"github.com/jimmysawczuk/tmpl/config"
+	"github.com/jimmysawczuk/tmpl/pipe"
 	"github.com/jimmysawczuk/tmpl/tmpl"
 	"github.com/pkg/errors"
 )
 
-var version string = "dev"
-var revision string
-var date string = time.Now().Format(time.RFC3339)
+var (
+	version  string = "dev"
+	revision string
+	date     string = time.Now().Format(time.RFC3339)
+)
 
-var watchMode bool
-var configFile string
-var showVersion bool
-var runCommand []string
-
-type pipeline struct {
-	inpath  string
-	outpath string
-	format  string
-
-	minify bool
-	env    map[string]string
-}
-
-type block struct {
-	In     string `json:"in"`
-	Out    string `json:"out"`
-	Format string `json:"format"`
-
-	Options blockOpts `json:"options"`
-}
-
-type blockOpts struct {
-	Minify bool              `json:"minify"`
-	Env    map[string]string `json:"env"`
-}
-
-var blocks []block
+var (
+	watchMode   bool
+	serverMode  bool
+	port        int
+	baseDir     string
+	configFile  string
+	showVersion bool
+	runCommand  []string
+)
 
 func init() {
 	flag.Usage = func() {
-		fmt.Printf("tmpl %s\n\n", version)
+		t, _ := time.Parse(time.RFC3339, date)
+		rev := revision
+		if len(rev) > 8 {
+			rev = rev[0:8]
+		}
+
+		fmt.Printf("tmpl %s\n", version)
+		fmt.Printf("  built: %s\n", t.UTC().Format("2-Jan-2006 15:04:05"))
+		fmt.Printf("  rev:   %s\n\n", rev)
 
 		fmt.Printf("Usage:\n")
 		fmt.Printf("  tmpl [options] [-- command]\n\n")
@@ -61,6 +54,9 @@ func init() {
 
 	flag.StringVar(&configFile, "f", "./tmpl.config.json", "path to tmpl config file")
 	flag.BoolVar(&watchMode, "w", false, "run in watch mode")
+	flag.BoolVar(&serverMode, "s", false, "run in watch mode and serve")
+	flag.IntVar(&port, "p", 8080, "port to listen on in serve mode")
+	flag.StringVar(&baseDir, "dir", ".", "public dir")
 	flag.BoolVar(&showVersion, "v", false, "show version information")
 }
 
@@ -76,6 +72,8 @@ func main() {
 		runCommand = args
 	}
 
+	watchMode = watchMode || serverMode
+
 	if err := run(); err != nil {
 		log.Fatal(err.Error())
 		os.Exit(2)
@@ -88,32 +86,35 @@ func run() error {
 		return errors.Wrapf(err, "open config file (path: %s)", configFile)
 	}
 
+	var blocks []config.Block
 	if err := json.NewDecoder(fp).Decode(&blocks); err != nil {
 		return errors.Wrap(err, "json: decode config file")
 	}
 
-	var watcher *fsnotify.Watcher
-	if watchMode {
-		w, err := fsnotify.NewWatcher()
-		if err != nil {
-			return errors.Wrap(err, "fsnotify: new")
-		}
+	watcher, err := pipe.New(watchMode)
+	if err != nil {
+		return errors.Wrap(err, "watch: new")
+	}
+	defer watcher.Close()
 
-		watcher = w
-		defer watcher.Close()
+	mode := tmpl.ModeProduction
+	if watchMode {
+		mode = tmpl.ModeLocal
 	}
 
-	pipelines := []pipeline{}
+	pipes := []*pipe.Pipe{}
 
 	for i, b := range blocks {
 
-		pipe := pipeline{
-			format: b.Format,
-			minify: b.Options.Minify,
-			env:    b.Options.Env,
+		pipe := &pipe.Pipe{
+			Format: b.Format,
+			Mode:   mode,
+
+			Minify: b.Options.Minify,
+			Env:    b.Options.Env,
 		}
 
-		pipe.inpath, _ = filepath.Abs(b.In)
+		pipe.In, _ = filepath.Abs(b.In)
 
 		ostat, err := os.Stat(b.Out)
 		if err == nil {
@@ -122,37 +123,38 @@ func run() error {
 
 				_, err := os.Stat(outpath)
 				if err == nil || os.IsNotExist(err) {
-					pipe.outpath, _ = filepath.Abs(outpath)
+					pipe.Out, _ = filepath.Abs(outpath)
 				} else {
 					return errors.Wrapf(err, "stat output path (path: %s, block: %d)", outpath, i+1)
 				}
 
-				pipe.outpath, _ = filepath.Abs(filepath.Join(b.Out, filepath.Base(b.In)))
+				pipe.Out, _ = filepath.Abs(filepath.Join(b.Out, filepath.Base(b.In)))
 			} else {
-				pipe.outpath, _ = filepath.Abs(b.Out)
+				pipe.Out, _ = filepath.Abs(b.Out)
 			}
 		} else if os.IsNotExist(err) {
 			if err := os.MkdirAll(filepath.Dir(b.Out), 0755); err != nil {
 				return errors.Wrapf(err, "mkdir (path: %s, block: %d)", filepath.Dir(b.Out), i+1)
 			}
 
-			pipe.outpath, _ = filepath.Abs(b.Out)
+			pipe.Out, _ = filepath.Abs(b.Out)
 		} else {
 			return errors.Wrapf(err, "stat (output: %s, block: %d)", b.Out, i+1)
 		}
 
-		pipelines = append(pipelines, pipe)
-
-		if watchMode {
-			log.Println("watching", pipe.inpath)
-			watcher.Add(pipe.inpath)
+		if err := watcher.AddPipe(pipe); err != nil {
+			log.Printf("couldn't watch path %s: %s", pipe.In, err)
 		}
+
+		pipes = append(pipes, pipe)
 	}
 
-	for _, pipe := range pipelines {
-		if err := pipe.run(); err != nil {
-			return errors.Wrapf(err, "run pipeline (path: %s)", pipe.inpath)
+	for _, pipe := range pipes {
+		if err := pipe.Run(); err != nil {
+			return errors.Wrapf(err, "run pipeline (path: %s)", pipe.In)
 		}
+
+		pipe.AttachRefs(watcher)
 	}
 
 	var cmd *exec.Cmd
@@ -167,36 +169,14 @@ func run() error {
 		}
 	}
 
+	watcherCh := make(chan string)
+	if serverMode {
+		go startServer(port, watcherCh)
+	}
+
 	if watchMode {
 		done := make(chan bool)
-		go func() {
-			for {
-				select {
-				case event, ok := <-watcher.Events:
-					if !ok {
-						return
-					}
-
-					if event.Op&fsnotify.Write == fsnotify.Write {
-						log.Println("changed:", event.Name)
-
-						for _, pipe := range pipelines {
-							if pipe.inpath == event.Name {
-								if err := pipe.run(); err != nil {
-									log.Printf("%s", errors.Wrapf(err, "pipeline (path: %s)", pipe.inpath))
-								}
-								log.Println(" --> wrote:", pipe.outpath)
-							}
-						}
-					}
-				case err, ok := <-watcher.Errors:
-					if !ok {
-						return
-					}
-					log.Println("error:", err)
-				}
-			}
-		}()
+		go watcher.Watch(watcherCh)
 		<-done
 	} else if cmd != nil {
 		err := cmd.Wait()
@@ -208,35 +188,23 @@ func run() error {
 	return nil
 }
 
-func (p *pipeline) run() error {
-	in, err := os.Open(p.inpath)
-	if err != nil {
-		return errors.Wrapf(err, "open input (path: %s)", p.inpath)
-	}
-	defer in.Close()
+func startServer(port int, watcherCh chan string) {
+	log.Printf("starting server on http://localhost:%d", port)
 
-	out, err := os.OpenFile(p.outpath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0644)
-	if err != nil {
-		return errors.Wrapf(err, "open output (path: %s)", p.outpath)
-	}
-	defer out.Close()
+	mux := http.NewServeMux()
+	mux.Handle("/", http.FileServer(http.Dir(baseDir)))
+	mux.Handle("/__tmpl", http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		res := <-watcherCh
+		json.NewEncoder(w).Encode(struct {
+			Status string    `json:"status"`
+			File   string    `json:"file"`
+			Date   time.Time `json:"date"`
+		}{
+			Status: "OK",
+			File:   res,
+			Date:   time.Now().Truncate(time.Millisecond),
+		})
+	}))
 
-	t := tmpl.New()
-
-	switch p.format {
-	case "html":
-		if err := t.WriteHTML(out, in, p.minify); err != nil {
-			return errors.Wrapf(err, "write html (in: %s)", p.inpath)
-		}
-	case "json":
-		if err := t.WriteJSON(out, in, p.minify); err != nil {
-			return errors.Wrapf(err, "write json (in: %s)", p.inpath)
-		}
-	default:
-		if err := t.WriteText(out, in); err != nil {
-			return errors.Wrapf(err, "write text (in: %s)", p.inpath)
-		}
-	}
-
-	return nil
+	http.ListenAndServe(fmt.Sprintf(":%d", port), mux)
 }
