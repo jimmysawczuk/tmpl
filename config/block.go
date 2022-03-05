@@ -11,5 +11,6 @@ type Block struct {
 type Options struct {
 	Minify bool                   `json:"minify"`
 	Env    map[string]string      `json:"env"`
+	Delims [2]string              `json:"delims"`
 	Params map[string]interface{} `json:"params"`
 }

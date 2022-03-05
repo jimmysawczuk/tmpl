@@ -26,7 +26,7 @@ func (t *JSONTmpl) Execute(out io.Writer, in io.Reader) error {
 		return errors.Wrap(err, "io: copy (input)")
 	}
 
-	tmpl, err := text.New("output").Funcs(t.funcs()).Parse(buf.String())
+	tmpl, err := text.New("output").Funcs(t.funcs()).Delims(t.leftDelim, t.rightDelim).Parse(buf.String())
 	if err != nil {
 		return errors.Wrap(err, "compile template")
 	}

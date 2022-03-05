@@ -10,11 +10,12 @@
 		"format": "json"
 	},
 	{
-		"in": "testdata/json.tmpl",
+		"in": "testdata/json-alt.tmpl",
 		"out": "testdata/out/json.min.json",
 		"format": "json",
 		"options": {
-			"minify": true
+			"minify": true,
+			"delims": ["<<", ">>"]
 		}
 	},
 	{
