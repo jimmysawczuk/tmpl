@@ -46,21 +46,26 @@ func (p *Pipe) Run() error {
 	var t executor
 	switch p.Format {
 	case "html":
-		t = tmpl.New().WithMode(p.Mode).
+		t = tmpl.New().
+			WithMode(p.Mode).
 			WithBaseDir(p.BaseDir).
 			WithIO(in, out).
 			WithDelims(p.Delims[0], p.Delims[1]).
-			HTML().WithMinify(p.Minify)
+			HTML().
+			WithMinify(p.Minify)
 	case "json":
-		t = tmpl.New().WithMode(p.Mode).
+		t = tmpl.New().
+			WithMode(p.Mode).
 			WithBaseDir(p.BaseDir).
 			WithIO(in, out).
 			WithDelims(p.Delims[0], p.Delims[1]).
 			JSON().
 			WithMinify(p.Minify)
 	default:
-		t = tmpl.New().WithMode(p.Mode).
-			WithBaseDir(p.BaseDir).WithIO(in, out).
+		t = tmpl.New().
+			WithMode(p.Mode).
+			WithBaseDir(p.BaseDir).
+			WithIO(in, out).
 			WithDelims(p.Delims[0], p.Delims[1])
 	}
 
