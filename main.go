@@ -12,9 +12,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jimmysawczuk/tmpl/config"
-	"github.com/jimmysawczuk/tmpl/pipe"
-	"github.com/jimmysawczuk/tmpl/tmpl"
+	"github.com/jimmysawczuk/tmpl/v3/config"
+	"github.com/jimmysawczuk/tmpl/v3/pipe"
+	"github.com/jimmysawczuk/tmpl/v3/tmpl"
 	"github.com/pkg/errors"
 )
 

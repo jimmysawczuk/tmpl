@@ -1,6 +1,6 @@
 # tmpl
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/jimmysawczuk/tmpl)](https://goreportcard.com/report/github.com/jimmysawczuk/tmpl)
+[![Go Report Card](https://goreportcard.com/badge/github.com/jimmysawczuk/tmpl/v3)](https://goreportcard.com/report/github.com/jimmysawczuk/tmpl/v3)
 
 **tmpl** is a small command-line utility to execute Go templates (defined in [`text/template`](https://golang.org/pkg/text/template) and [`html/template`](https://golang.org/pkg/html/template)) on files.
 

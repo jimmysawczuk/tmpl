@@ -5,7 +5,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/jimmysawczuk/tmpl/tmpl"
+	"github.com/jimmysawczuk/tmpl/v3/tmpl"
 	"github.com/pkg/errors"
 )
 

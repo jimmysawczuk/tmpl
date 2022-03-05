@@ -1,4 +1,4 @@
-module github.com/jimmysawczuk/tmpl
+module github.com/jimmysawczuk/tmpl/v3
 
 go 1.17
 

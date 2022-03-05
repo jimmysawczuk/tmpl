@@ -1,6 +1,6 @@
 package tmpl
 
-import "github.com/jimmysawczuk/tmpl/tmpl/tmplfunc"
+import "github.com/jimmysawczuk/tmpl/v3/tmpl/tmplfunc"
 
 func (t *Tmpl) funcs() map[string]interface{} {
 	return map[string]interface{}{
