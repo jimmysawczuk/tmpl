@@ -56,7 +56,8 @@ func (p *Pipe) Run() error {
 			WithBaseDir(p.BaseDir).
 			WithIO(in, out).
 			WithDelims(p.Delims[0], p.Delims[1]).
-			JSON().WithMinify(p.Minify)
+			JSON().
+			WithMinify(p.Minify)
 	default:
 		t = tmpl.New().WithMode(p.Mode).
 			WithBaseDir(p.BaseDir).WithIO(in, out).
@@ -64,7 +65,7 @@ func (p *Pipe) Run() error {
 	}
 
 	if err := t.Execute(out, in); err != nil {
-		return errors.Wrapf(err, "execute (%T, in: %s)", t, in)
+		return errors.Wrapf(err, "execute (%T, in: %s)", t, in.Name())
 	}
 
 	p.refs = t.Refs()
