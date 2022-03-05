@@ -19,6 +19,7 @@ type Pipe struct {
 
 	Minify bool
 	Env    map[string]string
+	Delims [2]string
 	Params map[string]interface{}
 
 	refs []string
@@ -36,7 +37,7 @@ func (p *Pipe) Run() error {
 	}
 	defer in.Close()
 
-	out, err := os.OpenFile(p.Out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0644)
+	out, err := os.OpenFile(p.Out, os.O_CREATE|os.O_WRONLY|os.O_TRUNC|os.O_SYNC, 0o644)
 	if err != nil {
 		return errors.Wrapf(err, "open output (path: %s)", p.Out)
 	}
@@ -45,11 +46,21 @@ func (p *Pipe) Run() error {
 	var t executor
 	switch p.Format {
 	case "html":
-		t = tmpl.New().WithMode(p.Mode).WithBaseDir(p.BaseDir).WithIO(in, out).HTML().WithMinify(p.Minify)
+		t = tmpl.New().WithMode(p.Mode).
+			WithBaseDir(p.BaseDir).
+			WithIO(in, out).
+			WithDelims(p.Delims[0], p.Delims[1]).
+			HTML().WithMinify(p.Minify)
 	case "json":
-		t = tmpl.New().WithMode(p.Mode).WithBaseDir(p.BaseDir).WithIO(in, out).JSON().WithMinify(p.Minify)
+		t = tmpl.New().WithMode(p.Mode).
+			WithBaseDir(p.BaseDir).
+			WithIO(in, out).
+			WithDelims(p.Delims[0], p.Delims[1]).
+			JSON().WithMinify(p.Minify)
 	default:
-		t = tmpl.New().WithMode(p.Mode).WithBaseDir(p.BaseDir).WithIO(in, out)
+		t = tmpl.New().WithMode(p.Mode).
+			WithBaseDir(p.BaseDir).WithIO(in, out).
+			WithDelims(p.Delims[0], p.Delims[1])
 	}
 
 	if err := t.Execute(out, in); err != nil {

@@ -112,6 +112,7 @@ func run() error {
 
 			Minify: b.Options.Minify,
 			Env:    b.Options.Env,
+			Delims: b.Options.Delims,
 		}
 
 		pipe.In, _ = filepath.Abs(b.In)
@@ -133,7 +134,7 @@ func run() error {
 				pipe.Out, _ = filepath.Abs(b.Out)
 			}
 		} else if os.IsNotExist(err) {
-			if err := os.MkdirAll(filepath.Dir(b.Out), 0755); err != nil {
+			if err := os.MkdirAll(filepath.Dir(b.Out), 0o755); err != nil {
 				return errors.Wrapf(err, "mkdir (path: %s, block: %d)", filepath.Dir(b.Out), i+1)
 			}
 

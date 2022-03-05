@@ -14,7 +14,8 @@
 		"out": "testdata/out/json.min.json",
 		"format": "json",
 		"options": {
-			"minify": true
+			"minify": true,
+			"delims": ["[[", "]]"]
 		}
 	},
 	{

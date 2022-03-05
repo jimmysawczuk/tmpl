@@ -33,6 +33,9 @@ type Tmpl struct {
 	out     *os.File
 	baseDir string
 
+	leftDelim  string
+	rightDelim string
+
 	now     time.Time
 	envVars map[string]string
 
@@ -49,8 +52,10 @@ func New() *Tmpl {
 			OS:   runtime.GOOS,
 			Arch: runtime.GOARCH,
 		},
-		now:  time.Now(),
-		refs: map[string]struct{}{},
+		leftDelim:  "{{",
+		rightDelim: "}}",
+		now:        time.Now(),
+		refs:       map[string]struct{}{},
 	}
 
 	return t
@@ -69,6 +74,14 @@ func (t *Tmpl) WithBaseDir(dir string) *Tmpl {
 
 func (t *Tmpl) WithMode(mode Mode) *Tmpl {
 	t.mode = mode
+	return t
+}
+
+func (t *Tmpl) WithDelims(left, right string) *Tmpl {
+	if left != "" && right != "" {
+		t.leftDelim = left
+		t.rightDelim = right
+	}
 	return t
 }
 
@@ -126,7 +139,7 @@ func (t *Tmpl) Execute(out io.Writer, in io.Reader) error {
 		return errors.Wrap(err, "io: copy (input)")
 	}
 
-	tmpl, err := text.New("output").Funcs(t.funcs()).Parse(buf.String())
+	tmpl, err := text.New("output").Funcs(t.funcs()).Delims(t.leftDelim, t.rightDelim).Parse(buf.String())
 	if err != nil {
 		return errors.Wrap(err, "compile template")
 	}
