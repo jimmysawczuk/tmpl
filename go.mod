@@ -1,6 +1,6 @@
 module github.com/jimmysawczuk/tmpl
 
-go 1.17
+go 1.18
 
 require (
 	github.com/fsnotify/fsnotify v1.4.9
@@ -12,5 +12,5 @@ require (
 require (
 	github.com/tdewolff/parse v2.3.4+incompatible // indirect
 	github.com/tdewolff/test v1.0.6 // indirect
-	golang.org/x/sys v0.0.0-20191005200804-aed5e4c7ecf9 // indirect
+	golang.org/x/sys v0.0.0-20220412211240-33da011f77ad // indirect
 )
