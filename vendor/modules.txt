@@ -4,6 +4,11 @@ github.com/fsnotify/fsnotify
 # github.com/pkg/errors v0.9.1
 ## explicit
 github.com/pkg/errors
+# github.com/skip2/go-qrcode v0.0.0-20200617195104-da1b6568686e
+## explicit; go 1.13
+github.com/skip2/go-qrcode
+github.com/skip2/go-qrcode/bitset
+github.com/skip2/go-qrcode/reedsolomon
 # github.com/tdewolff/minify v2.3.6+incompatible
 ## explicit
 github.com/tdewolff/minify

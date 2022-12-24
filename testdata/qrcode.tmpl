@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Test for {{ now | formatTime "3:04 PM" }}</title>
+        {{- ref "testdata/style.css" }}
+        <link href="/testdata/style.css" rel="stylesheet" type="text/css" />
+        <style type="text/css">
+            body {
+                font-family: Arial, Helvetica, sans-serif;
+            }
+
+            img {
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <img src="data:image/png;base64,{{ "https://www.google.com" | qrcode | base64 }}" />
+        <img src="data:image/png;base64,{{ qrcode "https://www.google.com" 256 | base64 }}" />
+        <img src="data:image/png;base64,{{ qrcode "https://www.google.com" 256 3 | base64 }}" />
+        {{ autoreload }}
+    </body>
+</html>

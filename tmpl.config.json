@@ -25,5 +25,13 @@
 		"options": {
 			"minify": true
 		}
+	},
+	{
+		"in": "testdata/qrcode.tmpl",
+		"out": "testdata/out/qrcode.html",
+		"format": "html",
+		"options": {
+			"minify": true
+		}
 	}
 ]
