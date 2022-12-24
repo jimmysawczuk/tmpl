@@ -37,7 +37,7 @@ jobs:
           asset_name: tmpl-${{ steps.tag.outputs.tag }}-linux-amd64
           asset_content_type: application/octet-stream
       - name: Upload build (linux, 386)
-        uses: actions/upload-release-asset@v1
+        uses: jimmysawczuk/actions/github/upload-release-asset@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -46,7 +46,7 @@ jobs:
           asset_name: tmpl-${{ steps.tag.outputs.tag }}-linux-386
           asset_content_type: application/octet-stream
       - name: Upload build (darwin, amd64)
-        uses: actions/upload-release-asset@v1
+        uses: jimmysawczuk/actions/github/upload-release-asset@main
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
