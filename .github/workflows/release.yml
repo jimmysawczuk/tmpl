@@ -40,6 +40,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           upload_url: ${{ github.event.release.upload_url }}
-          asset_path: ./${{ matrix.cmd }}-${{ steps.tag.outputs.tag }}-${{ matrix.arch.arch}}
-          asset_name: ${{ matrix.cmd }}-${{ steps.tag.outputs.tag }}-${{ matrix.arch.arch}}
+          asset_path: ./tmpl-${{ steps.tag.outputs.tag }}-${{ matrix.arch.arch}}
+          asset_name: tmpl-${{ steps.tag.outputs.tag }}-${{ matrix.arch.arch}}
           asset_content_type: application/octet-stream
