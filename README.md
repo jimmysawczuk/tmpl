@@ -1,7 +1,5 @@
 # tmpl
 
-[![Go Report Card](https://goreportcard.com/badge/github.com/jimmysawczuk/tmpl)](https://goreportcard.com/report/github.com/jimmysawczuk/tmpl)
-
 **tmpl** is a small command-line utility to execute Go templates (defined in [`text/template`](https://golang.org/pkg/text/template) and [`html/template`](https://golang.org/pkg/html/template)) on files.
 
 ## Features
@@ -25,10 +23,10 @@ Here's a sample configuration file:
 			// also set environment variables normally; variables set in the config
 			// file take precedence.
 			"env": {
-				"FOO": "BAR"
-			}
-		}
-	}
+				"FOO": "BAR",
+			},
+		},
+	},
 ]
 ```
 
@@ -36,27 +34,27 @@ Here's a sample configuration file:
 
 In addition to the [built-in functions](https://pkg.go.dev/text/template#hdr-Functions) provided by the `text/template` package, these functions are available in every template:
 
--   [`add`](#add)
--   [`asset`](#asset)
--   [`autoreload`](#autoreload)
--   [`env`](#env)
--   [`file`](#file)
--   [`formatTime`](#formatTime)
--   [`getJSON`](#getJSON)
--   [`inline`](#inline)
--   [`jsonify`](#jsonify)
--   [`markdown`](#markdown)
--   [`now`](#now)
--   [`parseTime`](#parseTime)
--   [`ref`](#ref)
--   [`safeCSS`](#safeCSS)
--   [`safeHTML`](#safeHTML)
--   [`safeHTMLAttr`](#safeHTMLAttr)
--   [`safeJS`](#safeJS)
--   [`seq`](#seq)
--   [`sub`](#sub)
--   [`svg`](#svg)
--   [`timeIn`](#timeIn)
+- [`add`](#add)
+- [`asset`](#asset)
+- [`autoreload`](#autoreload)
+- [`env`](#env)
+- [`file`](#file)
+- [`formatTime`](#formatTime)
+- [`getJSON`](#getJSON)
+- [`inline`](#inline)
+- [`jsonify`](#jsonify)
+- [`markdown`](#markdown)
+- [`now`](#now)
+- [`parseTime`](#parseTime)
+- [`ref`](#ref)
+- [`safeCSS`](#safeCSS)
+- [`safeHTML`](#safeHTML)
+- [`safeHTMLAttr`](#safeHTMLAttr)
+- [`safeJS`](#safeJS)
+- [`seq`](#seq)
+- [`sub`](#sub)
+- [`svg`](#svg)
+- [`timeIn`](#timeIn)
 
 ### `add`
 
